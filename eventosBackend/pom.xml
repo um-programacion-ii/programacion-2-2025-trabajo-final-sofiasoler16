@@ -1233,10 +1233,16 @@
                                 </goals>
                             </execution>
                             <execution>
-                                <id>npm install</id>
-                                <goals>
-                                    <goal>npm</goal>
-                                </goals>
+                              <id>npm install</id>
+                              <goals>
+                                <goal>npm</goal>
+                              </goals>
+                              <configuration>
+                                <arguments>install</arguments>
+                                <environmentVariables>
+                                  <PUPPETEER_SKIP_DOWNLOAD>true</PUPPETEER_SKIP_DOWNLOAD>
+                                </environmentVariables>
+                              </configuration>
                             </execution>
                             <execution>
                                 <id>webapp build dev</id>
