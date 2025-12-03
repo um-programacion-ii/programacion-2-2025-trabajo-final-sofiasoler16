@@ -19,9 +19,22 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.core.env.Environment;
 import tech.jhipster.config.DefaultProfileUtil;
 import tech.jhipster.config.JHipsterConstants;
+import com.um.eventosbackend.config.CatedraProperties;
+import com.um.eventosbackend.config.ProxyProperties;
+import com.um.eventosbackend.config.SessionProperties;
 
-@SpringBootApplication(exclude = { H2ConsoleAutoConfiguration.class })
-@EnableConfigurationProperties({ LiquibaseProperties.class, ApplicationProperties.class })
+
+@SpringBootApplication(exclude = {
+    H2ConsoleAutoConfiguration.class
+})
+@EnableConfigurationProperties({
+    LiquibaseProperties.class,
+    ApplicationProperties.class,
+    CatedraProperties.class,
+    ProxyProperties.class,
+    SessionProperties.class
+})
+
 public class EventosBackendApp {
 
     private static final Logger LOG = LoggerFactory.getLogger(EventosBackendApp.class);
