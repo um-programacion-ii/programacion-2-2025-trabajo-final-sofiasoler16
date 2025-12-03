@@ -124,3 +124,13 @@ jhipster:
 # ===================================================================
 
 # application:
+
+catedra:
+  base-url: ${CATEDRA_BASE_URL}
+  api-token: ${CATEDRA_API_TOKEN}
+
+proxy:
+  base-url: ${PROXY_BASE_URL}
+
+session:
+  timeout-minutes: ${SESSION_TIMEOUT_MINUTES:30}
