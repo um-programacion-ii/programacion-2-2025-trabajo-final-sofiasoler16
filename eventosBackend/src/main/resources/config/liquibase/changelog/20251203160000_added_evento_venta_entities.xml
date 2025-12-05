@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!-- Tabla de eventos locales -->
+  <changeSet id="20251203160000-1" author="sofiasoler16">
+    <createTable tableName="evento_local">
+      <column name="id" type="bigint">
+        <constraints primaryKey="true" nullable="false" primaryKeyName="pk_evento_local"/>
+      </column>
+      <column name="id_catedra" type="bigint">
+        <constraints nullable="false"/>
+      </column>
+      <column name="titulo" type="varchar(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="resumen" type="varchar(512)"/>
+      <column name="descripcion" type="varchar(1024)"/>
+      <column name="fecha" type="timestamp"/>
+      <column name="direccion" type="varchar(512)"/>
+      <column name="imagen" type="varchar(512)"/>
+      <column name="filas_asientos" type="integer"/>
+      <column name="columnas_asientos" type="integer"/>
+      <column name="precio_entrada" type="numeric(21,2)"/>
+      <column name="tipo_nombre" type="varchar(255)"/>
+      <column name="tipo_descripcion" type="varchar(255)"/>
+
+      <column name="created_by" type="varchar(50)"/>
+      <column name="created_date" type="timestamp"/>
+      <column name="last_modified_by" type="varchar(50)"/>
+      <column name="last_modified_date" type="timestamp"/>
+    </createTable>
+  </changeSet>
+
+  <!-- Tabla de ventas locales -->
+  <changeSet id="20251203160000-2" author="sofiasoler16">
+    <createTable tableName="venta_local">
+      <column name="id" type="bigint">
+        <constraints primaryKey="true" nullable="false" primaryKeyName="pk_venta_local"/>
+      </column>
+      <column name="estado" type="varchar(30)"/>
+      <column name="id_catedra" type="bigint"/>
+      <column name="monto_total" type="numeric(21,2)"/>
+      <column name="evento_id" type="bigint">
+        <constraints nullable="false"/>
+      </column>
+      <column name="usuario_id" type="bigint">
+        <constraints nullable="false"/>
+      </column>
+
+      <column name="created_by" type="varchar(50)"/>
+      <column name="created_date" type="timestamp"/>
+      <column name="last_modified_by" type="varchar(50)"/>
+      <column name="last_modified_date" type="timestamp"/>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="venta_local"
+                             baseColumnNames="evento_id"
+                             constraintName="fk_venta_local_evento"
+                             referencedTableName="evento_local"
+                             referencedColumnNames="id"/>
+
+    <addForeignKeyConstraint baseTableName="venta_local"
+                             baseColumnNames="usuario_id"
+                             constraintName="fk_venta_local_usuario"
+                             referencedTableName="jhi_user"
+                             referencedColumnNames="id"/>
+  </changeSet>
+
+  <!-- Tabla de asientos vendidos -->
+  <changeSet id="20251203160000-3" author="sofiasoler16">
+    <createTable tableName="asiento_venta">
+      <column name="id" type="bigint">
+        <constraints primaryKey="true" nullable="false" primaryKeyName="pk_asiento_venta"/>
+      </column>
+      <column name="fila" type="integer"/>
+      <column name="columna" type="integer"/>
+      <column name="nombre" type="varchar(255)"/>
+      <column name="apellido" type="varchar(255)"/>
+      <column name="venta_id" type="bigint">
+        <constraints nullable="false"/>
+      </column>
+
+      <column name="created_by" type="varchar(50)"/>
+      <column name="created_date" type="timestamp"/>
+      <column name="last_modified_by" type="varchar(50)"/>
+      <column name="last_modified_date" type="timestamp"/>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="asiento_venta"
+                             baseColumnNames="venta_id"
+                             constraintName="fk_asiento_venta_venta"
+                             referencedTableName="venta_local"
+                             referencedColumnNames="id"/>
+  </changeSet>
+
+  <!-- Datos iniciales de prueba -->
+  <changeSet id="20251203160000-4" author="sofiasoler16">
+    <insert tableName="evento_local">
+      <column name="id" valueNumeric="1001"/>
+      <column name="id_catedra" valueNumeric="1"/>
+      <column name="titulo" value="Evento de prueba"/>
+      <column name="resumen" value="Evento de prueba local"/>
+      <column name="descripcion" value="Evento de prueba creado por Liquibase"/>
+      <column name="filas_asientos" valueNumeric="10"/>
+      <column name="columnas_asientos" valueNumeric="10"/>
+      <column name="precio_entrada" valueNumeric="100.00"/>
+    </insert>
+
+    <insert tableName="venta_local">
+      <column name="id" valueNumeric="2001"/>
+      <column name="estado" value="CONFIRMADA"/>
+      <column name="id_catedra" valueNumeric="1"/>
+      <column name="monto_total" valueNumeric="100.00"/>
+      <column name="evento_id" valueNumeric="1001"/>
+      <column name="usuario_id" valueNumeric="1"/>
+    </insert>
+
+    <insert tableName="asiento_venta">
+      <column name="id" valueNumeric="3001"/>
+      <column name="fila" valueNumeric="1"/>
+      <column name="columna" valueNumeric="1"/>
+      <column name="nombre" value="Alumno"/>
+      <column name="apellido" value="Prueba"/>
+      <column name="venta_id" valueNumeric="2001"/>
+    </insert>
+  </changeSet>
+
+</databaseChangeLog>
