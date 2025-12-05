@@ -9,10 +9,6 @@ import java.util.Set;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-/**
- * Evento almacenado localmente en la base de datos.
- * Representa la copia local de un evento de la cátedra.
- */
 @Entity
 @Table(name = "evento_local")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
@@ -228,5 +224,5 @@ public class EventoLocal extends AbstractAuditingEntity<Long> implements Seriali
         this.tipoDescripcion = tipoDescripcion;
         return this;
     }
-    
+
 }
