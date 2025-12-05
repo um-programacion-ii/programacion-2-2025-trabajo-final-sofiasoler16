@@ -47,6 +47,10 @@ public class VentaLocal extends AbstractAuditingEntity<Long> implements Serializ
     @JoinColumn(name = "usuario_id", nullable = false)
     private User usuario;
 
+    @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    private Set<AsientoVenta> asientos = new HashSet<>();
+
     @Override
     public Long getId() {
         return this.id;
@@ -119,6 +123,26 @@ public class VentaLocal extends AbstractAuditingEntity<Long> implements Serializ
 
     public VentaLocal usuario(User usuario) {
         this.usuario = usuario;
+        return this;
+    }
+
+    public Set<AsientoVenta> getAsientos() {
+        return asientos;
+    }
+
+    public void setAsientos(Set<AsientoVenta> asientos) {
+        this.asientos = asientos;
+    }
+
+    public VentaLocal addAsiento(AsientoVenta asientoVenta) {
+        this.asientos.add(asientoVenta);
+        asientoVenta.setVenta(this);
+        return this;
+    }
+
+    public VentaLocal removeAsiento(AsientoVenta asientoVenta) {
+        this.asientos.remove(asientoVenta);
+        asientoVenta.setVenta(null);
         return this;
     }
 }

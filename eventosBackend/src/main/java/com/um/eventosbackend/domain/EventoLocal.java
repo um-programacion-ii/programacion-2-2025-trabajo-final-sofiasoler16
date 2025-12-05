@@ -59,6 +59,10 @@ public class EventoLocal extends AbstractAuditingEntity<Long> implements Seriali
     @Column(name = "tipo_descripcion")
     private String tipoDescripcion;
 
+    @OneToMany(mappedBy = "evento", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    private Set<VentaLocal> ventas = new HashSet<>();
+
     @Override
     public Long getId() {
         return this.id;
@@ -225,4 +229,23 @@ public class EventoLocal extends AbstractAuditingEntity<Long> implements Seriali
         return this;
     }
 
+    public Set<VentaLocal> getVentas() {
+        return ventas;
+    }
+
+    public void setVentas(Set<VentaLocal> ventas) {
+        this.ventas = ventas;
+    }
+
+    public EventoLocal addVenta(VentaLocal ventaLocal) {
+        this.ventas.add(ventaLocal);
+        ventaLocal.setEvento(this);
+        return this;
+    }
+
+    public EventoLocal removeVenta(VentaLocal ventaLocal) {
+        this.ventas.remove(ventaLocal);
+        ventaLocal.setEvento(null);
+        return this;
+    }
 }
