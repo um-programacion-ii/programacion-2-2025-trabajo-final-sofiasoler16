@@ -1,5 +1,4 @@
 package com.um.eventosbackend.domain;
-package com.um.eventosbackend.domain;
 
 import jakarta.persistence.*;
 import java.io.Serializable;
