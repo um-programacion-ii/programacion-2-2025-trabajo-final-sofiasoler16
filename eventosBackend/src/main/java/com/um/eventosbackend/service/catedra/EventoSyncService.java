@@ -8,6 +8,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +26,7 @@ public class EventoSyncService {
         this.eventoLocalRepository = eventoLocalRepository;
     }
 
-    public void sincronizarEventos() {
+    public void syncEventos() {
         log.info("Iniciando sincronización de eventos con cátedra...");
 
         List<CatedraEventoDetalleDTO> eventosRemotos;
@@ -95,5 +96,10 @@ public class EventoSyncService {
             local.setTipoNombre(null);
             local.setTipoDescripcion(null);
         }
+    }
+
+    @Scheduled(initialDelay = 60000, fixedDelay = 300000)
+    public void syncPeriodicamente() {
+        syncEventos();
     }
 }
