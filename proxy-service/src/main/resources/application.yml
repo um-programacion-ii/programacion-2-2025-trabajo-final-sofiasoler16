@@ -1,0 +1,31 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: proxy-service
+
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+app:
+  backend:
+    base-url: ${BACKEND_URL:http://localhost:8080}
+  catedra:
+    base-url: ${CATEDRA_URL:http://192.168.194.250:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+
