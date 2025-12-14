@@ -153,6 +153,12 @@ class EventoSyncServiceDbTest {
         d.setFilaAsientos(10);
         d.setColumnAsientos(12);
         d.setPrecioEntrada(precio);
+
+        var tipo = new com.um.eventosbackend.service.dto.catedra.CatedraEventoTipoDTO();
+        tipo.setNombre("Conferencia");
+        tipo.setDescripcion("Desc");
+        d.setEventoTipo(tipo);
+
         return d;
     }
 }

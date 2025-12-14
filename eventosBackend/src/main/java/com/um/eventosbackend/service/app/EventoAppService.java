@@ -52,8 +52,12 @@ public class EventoAppService {
         dto.setFilasAsientos(e.getFilasAsientos());
         dto.setColumnasAsientos(e.getColumnasAsientos());
         dto.setPrecioEntrada(e.getPrecioEntrada());
-        dto.setTipoNombre(e.getTipoNombre());
-        dto.setTipoDescripcion(e.getTipoDescripcion());
+
+        if (e.getEventoTipo() != null) {
+            dto.setTipoNombre(e.getEventoTipo().getNombre());
+            dto.setTipoDescripcion(e.getEventoTipo().getDescripcion());
+        }
+
         return dto;
     }
 }

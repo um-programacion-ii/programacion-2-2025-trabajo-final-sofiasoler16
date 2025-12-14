@@ -54,18 +54,24 @@ public class EventoLocal extends AbstractAuditingEntity<Long> implements Seriali
     @Column(name = "precio_entrada", precision = 21, scale = 2)
     private BigDecimal precioEntrada;
 
-    @Column(name = "tipo_nombre")
-    private String tipoNombre;
-
-    @Column(name = "tipo_descripcion")
-    private String tipoDescripcion;
-
     @Column(name = "activo", nullable = false)
     private Boolean activo = true;
 
     @Column(name = "fecha_expiracion")
     private Instant fechaExpiracion;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "evento_tipo_id", nullable = false)
+    private EventoTipoLocal eventoTipo;
+
+    @ManyToMany
+    @JoinTable(
+        name = "rel_evento_local__integrante_local",
+        joinColumns = @JoinColumn(name = "evento_local_id"),
+        inverseJoinColumns = @JoinColumn(name = "integrante_local_id")
+    )
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    private Set<IntegranteLocal> integrantes = new HashSet<>();
 
     @OneToMany(mappedBy = "evento", cascade = CascadeType.ALL, orphanRemoval = true)
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
@@ -211,32 +217,6 @@ public class EventoLocal extends AbstractAuditingEntity<Long> implements Seriali
         return this;
     }
 
-    public String getTipoNombre() {
-        return tipoNombre;
-    }
-
-    public void setTipoNombre(String tipoNombre) {
-        this.tipoNombre = tipoNombre;
-    }
-
-    public EventoLocal tipoNombre(String tipoNombre) {
-        this.tipoNombre = tipoNombre;
-        return this;
-    }
-
-    public String getTipoDescripcion() {
-        return tipoDescripcion;
-    }
-
-    public void setTipoDescripcion(String tipoDescripcion) {
-        this.tipoDescripcion = tipoDescripcion;
-    }
-
-    public EventoLocal tipoDescripcion(String tipoDescripcion) {
-        this.tipoDescripcion = tipoDescripcion;
-        return this;
-    }
-
     public Set<VentaLocal> getVentas() {
         return ventas;
     }
@@ -282,5 +262,41 @@ public class EventoLocal extends AbstractAuditingEntity<Long> implements Seriali
         this.fechaExpiracion = fechaExpiracion;
         return this;
     }
+    public EventoTipoLocal getEventoTipo() {
+        return eventoTipo;
+    }
+
+    public void setEventoTipo(EventoTipoLocal eventoTipo) {
+        this.eventoTipo = eventoTipo;
+    }
+
+    public EventoLocal eventoTipo(EventoTipoLocal eventoTipo) {
+        this.eventoTipo = eventoTipo;
+        return this;
+    }
+
+    public Set<IntegranteLocal> getIntegrantes() {
+        return integrantes;
+    }
+
+    public void setIntegrantes(Set<IntegranteLocal> integrantes) {
+        this.integrantes = integrantes;
+    }
+
+    public EventoLocal integrantes(Set<IntegranteLocal> integrantes) {
+        this.integrantes = integrantes;
+        return this;
+    }
+
+    public EventoLocal addIntegrante(IntegranteLocal integranteLocal) {
+        this.integrantes.add(integranteLocal);
+        return this;
+    }
+
+    public EventoLocal removeIntegrante(IntegranteLocal integranteLocal) {
+        this.integrantes.remove(integranteLocal);
+        return this;
+    }
+
 
 }
