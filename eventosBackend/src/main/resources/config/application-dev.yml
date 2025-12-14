@@ -26,6 +26,9 @@ management:
       enabled: false
 
 spring:
+  kafka:
+    bootstrap-servers: localhost:19092
+
   devtools:
     restart:
       enabled: true
@@ -139,3 +142,5 @@ app:
   sync:
     catedra:
       delete-missing: false
+
+
