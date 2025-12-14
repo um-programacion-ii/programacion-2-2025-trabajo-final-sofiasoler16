@@ -8,6 +8,7 @@ spring:
   data:
     redis:
       url: ${REDIS_URL:redis://localhost:6379}
+      asientos-key-pattern: "eventos:%s:asientos"
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
