@@ -123,11 +123,19 @@ jhipster:
 # application:
 
 catedra:
-  base-url: ${CATEDRA_BASE_URL:http://localhost:8081}
-  api-token: ${CATEDRA_API_TOKEN:dev-token}
+  base-url: ${CATEDRA_BASE_URL:http://192.168.194.250:8080}
+  api-token: ${CATEDRA_API_TOKEN:eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzb2ZpYXNvbGVyIiwiZXhwIjoxNzY4MzE4MTE1LCJhdXRoIjoiUk9MRV9VU0VSIiwiaWF0IjoxNzY1NzI2MTE1fQ.hpw_zuJ0qEUDD2KxNGVtR23QQPONErUMr3TvA3Jn4H4CVSXRQfIMdwX6yYuCA78l9xME5nUVUWo-uuUUOyLu-g}
+
+
+  # api-token: "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzb2ZpYXNvbGVyIiwiZXhwIjoxNzY4MzE4MTE1LCJhdXRoIjoiUk9MRV9VU0VSIiwiaWF0IjoxNzY1NzI2MTE1fQ.hpw_zuJ0qEUDD2KxNGVtR23QQPONErUMr3TvA3Jn4H4CVSXRQfIMdwX6yYuCA78l9xME5nUVUWo-uuUUOyLu-g"
 
 proxy:
   base-url: ${PROXY_BASE_URL:http://localhost:8080}
 
 session:
   timeout-minutes: ${SESSION_TIMEOUT_MINUTES:30}
+
+app:
+  sync:
+    catedra:
+      delete-missing: false
