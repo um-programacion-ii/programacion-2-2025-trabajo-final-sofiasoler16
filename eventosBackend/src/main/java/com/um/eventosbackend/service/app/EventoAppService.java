@@ -19,15 +19,15 @@ public class EventoAppService {
         this.eventoLocalRepository = eventoLocalRepository;
     }
 
-    public List<EventoResumenDTO> listarEventos() { // Lista de eventos
-        return eventoLocalRepository.findAll().stream()
+    public List<EventoResumenDTO> listarEventos() { // Lista de eventos activos
+        return eventoLocalRepository.findByActivoTrueOrderByFechaAsc().stream()
             .map(this::toResumenDTO)
             .collect(Collectors.toList());
     }
 
-
-    public Optional<EventoDetalleDTO> obtenerEvento(Long id) { // Evento por Id
-        return eventoLocalRepository.findById(id).map(this::toDetalleDTO);
+    public Optional<EventoDetalleDTO> obtenerEvento(Long id) { // Evento activo por Id
+        return eventoLocalRepository.findByIdAndActivoTrue(id)
+            .map(this::toDetalleDTO);
     }
 
     private EventoResumenDTO toResumenDTO(EventoLocal e) {

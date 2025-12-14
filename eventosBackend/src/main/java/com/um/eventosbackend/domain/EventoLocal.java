@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import java.time.Instant;
 
 @Entity
 @Table(name = "evento_local")
@@ -58,6 +59,13 @@ public class EventoLocal extends AbstractAuditingEntity<Long> implements Seriali
 
     @Column(name = "tipo_descripcion")
     private String tipoDescripcion;
+
+    @Column(name = "activo", nullable = false)
+    private Boolean activo = true;
+
+    @Column(name = "fecha_expiracion")
+    private Instant fechaExpiracion;
+
 
     @OneToMany(mappedBy = "evento", cascade = CascadeType.ALL, orphanRemoval = true)
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
@@ -248,4 +256,31 @@ public class EventoLocal extends AbstractAuditingEntity<Long> implements Seriali
         ventaLocal.setEvento(null);
         return this;
     }
+
+    public Boolean getActivo() {
+        return activo;
+    }
+
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
+    }
+
+    public EventoLocal activo(Boolean activo) {
+        this.activo = activo;
+        return this;
+    }
+
+    public Instant getFechaExpiracion() {
+        return fechaExpiracion;
+    }
+
+    public void setFechaExpiracion(Instant fechaExpiracion) {
+        this.fechaExpiracion = fechaExpiracion;
+    }
+
+    public EventoLocal fechaExpiracion(Instant fechaExpiracion) {
+        this.fechaExpiracion = fechaExpiracion;
+        return this;
+    }
+
 }

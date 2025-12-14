@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
+
 
 @Service
 @Transactional
@@ -20,6 +22,10 @@ public class EventoSyncService {
 
     private final CatedraClient catedraClient;
     private final EventoLocalRepository eventoLocalRepository;
+
+    @Value("${app.sync.catedra.delete-missing:true}")
+    private boolean deleteMissing = true;
+
 
     public EventoSyncService(CatedraClient catedraClient, EventoLocalRepository eventoLocalRepository) {
         this.catedraClient = catedraClient;
@@ -64,17 +70,27 @@ public class EventoSyncService {
         }
 
         // --- Bajas ---
-        Set<Long> idsRemotos = remotosPorId.keySet();
+        if (deleteMissing) {
+            Set<Long> idsRemotos = remotosPorId.keySet();
 
-        for (EventoLocal local : eventosLocales) {
-            Long idCatedra = local.getIdCatedra();
-            if (idCatedra != null && !idsRemotos.contains(idCatedra)) {
-                log.info("Eliminando evento_local id={} (idCatedra={}) porque ya no existe en cátedra", local.getId(), idCatedra);
-                eventoLocalRepository.delete(local);
+            for (EventoLocal local : eventosLocales) {
+                Long idCatedra = local.getIdCatedra();
+                if (idCatedra != null && !idsRemotos.contains(idCatedra)) {
+                    log.info(
+                        "Eliminando evento_local id={} (idCatedra={}) porque ya no existe en cátedra",
+                        local.getId(),
+                        idCatedra
+                    );
+                    eventoLocalRepository.delete(local);
+                }
             }
+        } else {
+            log.debug("Bajas deshabilitadas (app.sync.catedra.delete-missing=false)");
         }
 
         log.info("Sincronización de eventos con cátedra finalizada");
+
+
     }
 
     private void mapearDesdeCatedra(CatedraEventoDetalleDTO remoto, EventoLocal local) {
