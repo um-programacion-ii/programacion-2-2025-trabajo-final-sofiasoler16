@@ -73,7 +73,9 @@ class EventoSyncServiceTest {
         verify(eventoLocalRepository).save(argThat(local ->
             local.getIdCatedra().equals(1L)
                 && "Evento remoto 1".equals(local.getTitulo())
-                && "Tipo Evento remoto 1".equals(local.getTipoNombre())
+                && local.getEventoTipo() != null
+                && "Tipo Evento remoto 1".equals(local.getEventoTipo().getNombre())
+
         ));
 
         verify(eventoLocalRepository, never()).delete(any(EventoLocal.class));
@@ -97,7 +99,8 @@ class EventoSyncServiceTest {
         eventoSyncService.syncEventos();
 
         assertThat(existente.getTitulo()).isEqualTo("Titulo nuevo");
-        assertThat(existente.getTipoNombre()).isEqualTo("Tipo Titulo nuevo");
+        assertThat(existente.getEventoTipo().getNombre()).isEqualTo("Tipo Titulo nuevo");
+
 
         verify(eventoLocalRepository).save(existente);
 

@@ -1,18 +1,22 @@
 package com.um.eventosbackend.service.catedra;
 
 import com.um.eventosbackend.domain.EventoLocal;
+import com.um.eventosbackend.domain.EventoTipoLocal;
+import com.um.eventosbackend.domain.IntegranteLocal;
 import com.um.eventosbackend.repository.EventoLocalRepository;
+import com.um.eventosbackend.repository.EventoTipoLocalRepository;
+import com.um.eventosbackend.repository.IntegranteLocalRepository;
 import com.um.eventosbackend.service.dto.catedra.CatedraEventoDetalleDTO;
+import com.um.eventosbackend.service.dto.catedra.CatedraEventoIntegranteDTO;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Value;
-
 
 @Service
 @Transactional
@@ -22,14 +26,22 @@ public class EventoSyncService {
 
     private final CatedraClient catedraClient;
     private final EventoLocalRepository eventoLocalRepository;
+    private final EventoTipoLocalRepository eventoTipoLocalRepository;
+    private final IntegranteLocalRepository integranteLocalRepository;
 
     @Value("${app.sync.catedra.delete-missing:true}")
     private boolean deleteMissing = true;
 
-
-    public EventoSyncService(CatedraClient catedraClient, EventoLocalRepository eventoLocalRepository) {
+    public EventoSyncService(
+        CatedraClient catedraClient,
+        EventoLocalRepository eventoLocalRepository,
+        EventoTipoLocalRepository eventoTipoLocalRepository,
+        IntegranteLocalRepository integranteLocalRepository
+    ) {
         this.catedraClient = catedraClient;
         this.eventoLocalRepository = eventoLocalRepository;
+        this.eventoTipoLocalRepository = eventoTipoLocalRepository;
+        this.integranteLocalRepository = integranteLocalRepository;
     }
 
     public void syncEventos() {
@@ -39,7 +51,6 @@ public class EventoSyncService {
         try {
             eventosRemotos = catedraClient.listarEventos();
         } catch (RuntimeException ex) {
-            // Por si el servicio de cátedra está caído o no accesible
             log.warn("No se pudo obtener el listado de eventos de la cátedra", ex);
             return;
         }
@@ -49,12 +60,13 @@ public class EventoSyncService {
 
         List<EventoLocal> eventosLocales = eventoLocalRepository.findAll();
 
-        // --- Altas y modificaciones ---
+        // Altas y modificaciones
         for (CatedraEventoDetalleDTO remoto : eventosRemotos) {
             Long idCatedra = remoto.getId();
-            Optional<EventoLocal> existenteOpt = eventoLocalRepository.findByIdCatedra(idCatedra);
 
-            EventoLocal eventoLocal = existenteOpt.orElseGet(EventoLocal::new);
+            EventoLocal eventoLocal = eventoLocalRepository
+                .findByIdCatedra(idCatedra)
+                .orElseGet(EventoLocal::new);
 
             boolean esNuevo = eventoLocal.getId() == null;
 
@@ -69,7 +81,7 @@ public class EventoSyncService {
             eventoLocalRepository.save(eventoLocal);
         }
 
-        // --- Bajas ---
+        // Bajas
         if (deleteMissing) {
             Set<Long> idsRemotos = remotosPorId.keySet();
 
@@ -89,8 +101,6 @@ public class EventoSyncService {
         }
 
         log.info("Sincronización de eventos con cátedra finalizada");
-
-
     }
 
     private void mapearDesdeCatedra(CatedraEventoDetalleDTO remoto, EventoLocal local) {
@@ -105,13 +115,57 @@ public class EventoSyncService {
         local.setColumnasAsientos(remoto.getColumnAsientos());
         local.setPrecioEntrada(remoto.getPrecioEntrada());
 
-        if (remoto.getEventoTipo() != null) {
-            local.setTipoNombre(remoto.getEventoTipo().getNombre());
-            local.setTipoDescripcion(remoto.getEventoTipo().getDescripcion());
-        } else {
-            local.setTipoNombre(null);
-            local.setTipoDescripcion(null);
+        // -------- EventoTipoLocal (ManyToOne) --------
+        if (remoto.getEventoTipo() == null || remoto.getEventoTipo().getNombre() == null) {
+            // como tu columna evento_tipo_id es nullable=false
+            throw new IllegalStateException("Evento cátedra id=" + remoto.getId() + " vino sin eventoTipo");
         }
+
+        String nombreTipo = remoto.getEventoTipo().getNombre();
+        String descTipo = remoto.getEventoTipo().getDescripcion();
+
+        EventoTipoLocal tipo = eventoTipoLocalRepository
+            .findOneByNombre(nombreTipo)
+            .orElseGet(() -> {
+                EventoTipoLocal nuevo = new EventoTipoLocal();
+                nuevo.setNombre(nombreTipo);
+                nuevo.setDescripcion(descTipo);
+                return eventoTipoLocalRepository.save(nuevo);
+            });
+
+        // si existe y cambia la descripción, la actualizamos
+        if (descTipo != null && (tipo.getDescripcion() == null || !descTipo.equals(tipo.getDescripcion()))) {
+            tipo.setDescripcion(descTipo);
+            tipo = eventoTipoLocalRepository.save(tipo);
+        }
+
+        local.setEventoTipo(tipo);
+
+        // -------- IntegrantesLocal (ManyToMany) --------
+        Set<IntegranteLocal> nuevos = new HashSet<>();
+        if (remoto.getIntegrantes() != null) {
+            for (CatedraEventoIntegranteDTO i : remoto.getIntegrantes()) {
+                String nombre = i.getNombre();
+                String apellido = i.getApellido();
+                String identificacion = i.getIdentificacion();
+
+                IntegranteLocal integrante = integranteLocalRepository
+                    .findOneByNombreAndApellidoAndIdentificacion(nombre, apellido, identificacion)
+                    .orElseGet(() -> {
+                        IntegranteLocal n = new IntegranteLocal();
+                        n.setNombre(nombre);
+                        n.setApellido(apellido);
+                        n.setIdentificacion(identificacion);
+                        return integranteLocalRepository.save(n);
+                    });
+
+                nuevos.add(integrante);
+            }
+        }
+
+        // mantener colección persistente
+        local.getIntegrantes().clear();
+        local.getIntegrantes().addAll(nuevos);
     }
 
     @Scheduled(initialDelay = 60000, fixedDelay = 300000)
