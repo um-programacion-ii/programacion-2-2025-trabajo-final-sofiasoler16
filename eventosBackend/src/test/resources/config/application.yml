@@ -20,6 +20,7 @@ spring:
     function:
       definition: kafkaConsumer;kafkaProducer
     stream:
+      enabled: false
       kafka:
         binder:
           replicationFactor: 1
@@ -54,6 +55,7 @@ spring:
           authority-prefix: ''
           authorities-claim-name: auth
   task:
+
     execution:
       thread-name-prefix: eventos-backend-task-
       pool:
@@ -62,6 +64,7 @@ spring:
         queue-capacity: 10000
     scheduling:
       thread-name-prefix: eventos-backend-scheduling-
+      enabled: false
       pool:
         size: 20
   thymeleaf:
@@ -113,3 +116,6 @@ management:
   health:
     mail:
       enabled: false
+
+
+

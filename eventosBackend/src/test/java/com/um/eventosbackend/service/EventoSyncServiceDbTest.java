@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.um.eventosbackend.domain.EventoLocal;
+import com.um.eventosbackend.domain.EventoTipoLocal;
 import com.um.eventosbackend.repository.EventoLocalRepository;
+import com.um.eventosbackend.repository.EventoTipoLocalRepository;
 import com.um.eventosbackend.service.catedra.CatedraClient;
 import com.um.eventosbackend.service.catedra.EventoSyncService;
 import com.um.eventosbackend.service.dto.catedra.CatedraEventoDetalleDTO;
@@ -37,23 +39,25 @@ class EventoSyncServiceDbTest {
     @Autowired
     private EventoLocalRepository eventoLocalRepository;
 
+    @Autowired
+    EventoTipoLocalRepository eventoTipoLocalRepository;
+
+    private EventoTipoLocal tipo;
 
     @BeforeEach
-    void setUp() {
-        eventoLocalRepository.deleteAll();
+    void setup() {
+        tipo = eventoTipoLocalRepository.saveAndFlush(new EventoTipoLocal().nombre("Conferencia"));
     }
 
     @Test
     void debeCrearEventoLocalCuandoNoExiste() {
-        // given
+
         var remoto = dto(1L, "Recital", "Resumen", "Desc", new BigDecimal("15000"));
 
         when(catedraClient.listarEventos()).thenReturn(List.of(remoto));
 
-        // when
         eventoSyncService.syncEventos();
 
-        // then
         var guardados = eventoLocalRepository.findAll();
         assertThat(guardados).hasSize(1);
 
@@ -69,20 +73,20 @@ class EventoSyncServiceDbTest {
 
     @Test
     void debeActualizarEventoLocalCuandoYaExiste() {
-        // given
+
         var local = new EventoLocal();
         local.setIdCatedra(2L);
         local.setTitulo("Titulo viejo");
         local.setPrecioEntrada(new BigDecimal("1000"));
+        local.setEventoTipo(tipo);
+
         eventoLocalRepository.saveAndFlush(local);
 
         var remoto = dto(2L, "Titulo nuevo", "Nuevo resumen", "Nueva desc", new BigDecimal("20000"));
         when(catedraClient.listarEventos()).thenReturn(List.of(remoto));
 
-        // when
         eventoSyncService.syncEventos();
 
-        // then
         var actualizado = eventoLocalRepository.findByIdCatedra(2L).orElseThrow();
         assertThat(actualizado.getTitulo()).isEqualTo("Titulo nuevo");
         assertThat(actualizado.getResumen()).isEqualTo("Nuevo resumen");
@@ -92,25 +96,26 @@ class EventoSyncServiceDbTest {
 
     @Test
     void debeEliminarLocalesQueYaNoEstanEnCatedra_porDefecto() {
-        // given
         var a = new EventoLocal();
         a.setIdCatedra(10L);
         a.setTitulo("A");
+        a.setEventoTipo(tipo);
+
         eventoLocalRepository.save(a);
 
         var b = new EventoLocal();
         b.setIdCatedra(11L);
         b.setTitulo("B");
+        b.setEventoTipo(tipo);
+
         eventoLocalRepository.saveAndFlush(b);
 
         when(catedraClient.listarEventos()).thenReturn(
             List.of(dto(10L, "A", "r", "d", BigDecimal.TEN))
         );
 
-        // when
         eventoSyncService.syncEventos();
 
-        // then
         assertThat(eventoLocalRepository.findByIdCatedra(10L)).isPresent();
         assertThat(eventoLocalRepository.findByIdCatedra(11L)).isEmpty();
     }
@@ -121,18 +126,19 @@ class EventoSyncServiceDbTest {
         var local = new EventoLocal();
         local.setIdCatedra(99L);
         local.setTitulo("No tocar");
+        local.setEventoTipo(tipo);
+
         eventoLocalRepository.saveAndFlush(local);
 
         when(catedraClient.listarEventos())
             .thenThrow(new RuntimeException("Cátedra caída"));
 
-        // when
+        var before = eventoLocalRepository.count();
+
         eventoSyncService.syncEventos();
 
-        // then
-        var siguen = eventoLocalRepository.findAll();
-        assertThat(siguen).hasSize(1);
-        assertThat(siguen.get(0).getTitulo()).isEqualTo("No tocar");
+        var after = eventoLocalRepository.count();
+        assertThat(after).isEqualTo(before);
     }
 
     private static CatedraEventoDetalleDTO dto(

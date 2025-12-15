@@ -18,9 +18,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 @Service
 @Transactional
 public class EventoSyncService {
+
 
     private static final Logger log = LoggerFactory.getLogger(EventoSyncService.class);
 
@@ -31,6 +33,7 @@ public class EventoSyncService {
 
     @Value("${app.sync.catedra.delete-missing:true}")
     private boolean deleteMissing = true;
+
 
     public EventoSyncService(
         CatedraClient catedraClient,
