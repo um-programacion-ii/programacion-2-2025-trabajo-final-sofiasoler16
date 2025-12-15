@@ -26,8 +26,15 @@ management:
       enabled: false
 
 spring:
+  cloud:
+    stream:
+      enabled: false
   kafka:
     bootstrap-servers: localhost:9092
+  task:
+    scheduling:
+      enabled: false
+
 
   devtools:
     restart:
