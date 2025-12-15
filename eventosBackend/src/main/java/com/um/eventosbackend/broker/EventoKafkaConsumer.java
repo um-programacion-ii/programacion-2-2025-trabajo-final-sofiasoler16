@@ -12,11 +12,11 @@ public class EventoKafkaConsumer {
     @KafkaListener(
         topics = "eventos.cambios",
         groupId = "sofiasoler16"
+//      id de github
     )
     public void onEventoCambio(String mensaje) {
         log.info("📩 Cambio de evento recibido desde Kafka: {}", mensaje);
-
-        // En el futuro:
+        
         // - parsear JSON
         // - llamar a EventoSyncService
     }
