@@ -1,0 +1,7 @@
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+
+backend:
+  base-url: http://localhost:8080
+  notify-token: ${BACKEND_NOTIFY_TOKEN}
