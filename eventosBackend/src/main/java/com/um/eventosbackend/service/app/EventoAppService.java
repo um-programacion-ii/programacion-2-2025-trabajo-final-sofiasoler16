@@ -8,9 +8,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
+@Transactional
 public class EventoAppService {
 
     private final EventoLocalRepository eventoLocalRepository;
@@ -25,9 +27,14 @@ public class EventoAppService {
             .collect(Collectors.toList());
     }
 
-    public Optional<EventoDetalleDTO> obtenerEvento(Long id) { // Evento activo por Id
-        return eventoLocalRepository.findByIdAndActivoTrue(id)
-            .map(this::toDetalleDTO);
+    public Optional<EventoDetalleDTO> obtenerEvento(Long id) {
+        Optional<EventoLocal> evento = eventoLocalRepository.findByIdCatedraAndActivoTrue(id);
+
+        if (evento.isEmpty()) {
+            evento = eventoLocalRepository.findByIdAndActivoTrue(id);
+        }
+
+        return evento.map(this::toDetalleDTO);
     }
 
     private EventoResumenDTO toResumenDTO(EventoLocal e) {
