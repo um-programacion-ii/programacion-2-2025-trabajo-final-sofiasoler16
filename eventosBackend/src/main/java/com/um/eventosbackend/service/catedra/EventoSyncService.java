@@ -117,6 +117,7 @@ public class EventoSyncService {
         local.setFilasAsientos(remoto.getFilaAsientos());
         local.setColumnasAsientos(remoto.getColumnAsientos());
         local.setPrecioEntrada(remoto.getPrecioEntrada());
+        local.setActivo(true);
 
         // -------- EventoTipoLocal (ManyToOne) --------
         if (remoto.getEventoTipo() == null || remoto.getEventoTipo().getNombre() == null) {
@@ -165,6 +166,7 @@ public class EventoSyncService {
                 nuevos.add(integrante);
             }
         }
+
 
         // mantener colección persistente
         local.getIntegrantes().clear();
