@@ -156,6 +156,16 @@ backend:
   base-url: ${BACKEND_BASE_URL:http://localhost:8080}
 
 
-
+resilience4j:
+  retry:
+    instances:
+      catedraRetry:
+        maxAttempts: 3
+        waitDuration: 2s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - org.springframework.web.reactive.function.client.WebClientResponseException
+          - java.io.IOException
 
 

@@ -27,7 +27,7 @@ public class EventoAppResource {
 
     @GetMapping("/{id}")
     public ResponseEntity<EventoDetalleDTO> obtener(@PathVariable Long id) {
-        return eventoAppService.obtenerEvento(id)
+        return eventoAppService.obtenerPorIdCatedra(id)
             .or(() -> eventoAppService.obtenerEvento(id))
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());

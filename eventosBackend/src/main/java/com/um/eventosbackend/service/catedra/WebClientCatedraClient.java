@@ -3,6 +3,8 @@ package com.um.eventosbackend.service.catedra;
 import com.um.eventosbackend.service.dto.catedra.CatedraEventoDetalleDTO;
 import com.um.eventosbackend.service.dto.catedra.CatedraEventoResumenDTO;
 import java.util.List;
+
+import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -16,7 +18,6 @@ public class WebClientCatedraClient implements CatedraClient {
 
     private static final Logger log = LoggerFactory.getLogger(WebClientCatedraClient.class);
 
-    // Paths relativos al base-url de la cátedra
     private static final String EVENTOS_RESUMIDOS_PATH = "/api/endpoints/v1/eventos-resumidos";
     private static final String EVENTOS_PATH = "/api/endpoints/v1/eventos";
     private static final String EVENTO_DETALLE_PATH = "/api/endpoints/v1/evento/{id}";
@@ -28,6 +29,7 @@ public class WebClientCatedraClient implements CatedraClient {
     }
 
     @Override
+    @Retry(name = "catedraRetry")
     public List<CatedraEventoResumenDTO> listarEventosResumidos() {
         log.debug("Llamando a cátedra: {}", EVENTOS_RESUMIDOS_PATH);
 
@@ -45,8 +47,9 @@ public class WebClientCatedraClient implements CatedraClient {
     }
 
     @Override
+    @Retry(name = "catedraRetry")
     public List<CatedraEventoDetalleDTO> listarEventos() {
-        log.debug("Llamando a cátedra: {}", EVENTOS_PATH);
+        log.debug("Llamando a cátedra con reintentos: {}", EVENTOS_PATH);
 
         return webClient
             .get()
@@ -54,14 +57,11 @@ public class WebClientCatedraClient implements CatedraClient {
             .retrieve()
             .bodyToFlux(CatedraEventoDetalleDTO.class)
             .collectList()
-            .onErrorResume(error -> {
-                log.error("Error consultando eventos en cátedra", error);
-                return Mono.just(List.of());
-            })
             .block();
     }
 
     @Override
+    @Retry(name = "catedraRetry")
     public CatedraEventoDetalleDTO obtenerEventoPorId(Long id) {
         log.debug("Llamando a cátedra: {} con id={}", EVENTO_DETALLE_PATH, id);
 
