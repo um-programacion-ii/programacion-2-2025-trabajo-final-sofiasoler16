@@ -11,21 +11,21 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/app")
 public class SesionAppResource {
 
-    private final SesionService sessionService;
+    private final SesionService sesionService;
 
     public SesionAppResource(SesionService sessionService) {
-        this.sessionService = sessionService;
+        this.sesionService = sessionService;
     }
 
     @PostMapping("/sesion")
     public ResponseEntity<SesionCompra> crearORenovarSesion(@RequestBody SesionCompra datos, HttpSession session) {
-        SesionCompra sesion = sessionService.renovarSesion(session, datos);
+        SesionCompra sesion = sesionService.renovarSesion(session, datos);
         return ResponseEntity.ok(sesion);
     }
 
     @GetMapping("/sesion")
     public ResponseEntity<SesionCompra> consultarSesion(HttpSession session) {
-        SesionCompra sesion = sessionService.obtenerSesion(session);
+        SesionCompra sesion = sesionService.obtenerSesion(session);
         if (sesion == null) {
             return ResponseEntity.noContent().build(); // 204 si no hay sesión
         }
@@ -34,17 +34,27 @@ public class SesionAppResource {
 
     @DeleteMapping("/sesion")
     public ResponseEntity<Void> cerrarSesion(HttpSession session) {
-        sessionService.limpiarSesion(session);
+        sesionService.limpiarSesion(session);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/seleccion")
     public ResponseEntity<SesionCompra> seleccionarAsiento(@RequestBody SeleccionAsientoRequest request, HttpSession session) {
         try {
-            SesionCompra sesion = sessionService.seleccionarAsiento(session, request);
+            SesionCompra sesion = sesionService.seleccionarAsiento(session, request);
             return ResponseEntity.ok(sesion);
         } catch (RuntimeException e) {
             // Devolvemos un 400 Bad Request si supera los 4 asientos
+            return ResponseEntity.badRequest().header("X-error-message", e.getMessage()).build();
+        }
+    }
+
+    @PostMapping("/bloquear")
+    public ResponseEntity<SesionCompra> bloquearAsientos(HttpSession session) { // Cambiado de 'sesion' a 'session'
+        try {
+            SesionCompra sesion = sesionService.bloquearAsientosEnSesion(session);
+            return ResponseEntity.ok(sesion);
+        } catch (Exception e) {
             return ResponseEntity.badRequest().header("X-error-message", e.getMessage()).build();
         }
     }

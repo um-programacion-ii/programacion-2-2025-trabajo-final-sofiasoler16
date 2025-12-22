@@ -142,7 +142,7 @@ catedra:
 
 
 proxy:
-  base-url: ${PROXY_BASE_URL:http://localhost:8080}
+  base-url: ${PROXY_BASE_URL:http://localhost:8081}
 
 session:
   timeout-minutes: ${SESSION_TIMEOUT_MINUTES:30}
