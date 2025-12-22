@@ -1,7 +1,12 @@
 spring:
   kafka:
     bootstrap-servers: localhost:9092
+  data:
+    redis:
+      host: 192.168.194.250
+      port: 6379
 
 backend:
   base-url: http://localhost:8080
-  notify-token: ${BACKEND_NOTIFY_TOKEN}
+  notify-token: ${BACKEND_NOTIFY_TOKEN:eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzb2ZpYXNvbGVyIiwiZXhwIjoxODUyMzkwMzU3LCJhdXRoIjoiUk9MRV9VU0VSIiwiaWF0IjoxNzY1OTkwMzU3fQ.v4EYp2ua0o1BU9onan9Rb2t-jKvnzKMn5uiXH_sl0AM3dF6RSg1cUXljWG6NG5SxkPn7-_ZqOJZ7tMD3AKHfpA}
+
