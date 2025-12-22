@@ -1,13 +1,26 @@
 package com.um.eventosbackend.service.app;
 
+import com.um.eventosbackend.client.ProxyClient;
 import com.um.eventosbackend.service.dto.app.AsientoSeleccionadoDTO;
 import com.um.eventosbackend.service.dto.app.SeleccionAsientoRequest;
 import com.um.eventosbackend.service.dto.app.SesionCompra;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 @Service
 public class SesionService {
+    private final ProxyClient proxyClient;
+
+    @Value("${catedra.api-token}")
+    private String tokenCatedra;
+
+    public SesionService(ProxyClient proxyClient) {
+        this.proxyClient = proxyClient;
+    }
+
     public static final String SESSION_KEY = "SESION_COMPRA_ACTIVA";
 
     // Crear o renovar
@@ -41,11 +54,33 @@ public class SesionService {
             if (sesion.getAsientos().size() >= 4) {
                 throw new RuntimeException("No puedes seleccionar más de 4 asientos");
             }
-            // Corregido: pasar fila y columna (no fila dos veces)
             sesion.getAsientos().add(new AsientoSeleccionadoDTO(request.getFila(), request.getColumna()));
         }
 
         session.setAttribute(SESSION_KEY, sesion);
         return sesion;
+    }
+
+    public SesionCompra bloquearAsientosEnSesion(HttpSession session) {
+        SesionCompra sesion = obtenerSesion(session);
+        if (sesion == null || sesion.getAsientos().isEmpty()) {
+            throw new RuntimeException("No hay asientos seleccionados para bloquear");
+        }
+
+        Map resultado = proxyClient.bloquearAsientos(sesion.getEventoId(), sesion.getAsientos(), tokenCatedra).block();
+        
+        boolean esExitoso = (resultado != null) && (
+            Boolean.TRUE.equals(resultado.get("creado")) ||
+                Boolean.TRUE.equals(resultado.get("resultado"))
+        );
+
+        if (esExitoso) {
+            sesion.setEtapaActual("DATOS_PERSONALES");
+            session.setAttribute(SESSION_KEY, sesion);
+            return sesion;
+        } else {
+            Object mensajeObj = (resultado != null) ? resultado.get("resultado") : "Error desconocido";
+            throw new RuntimeException("Cátedra no pudo bloquear: " + String.valueOf(mensajeObj));
+        }
     }
 }
