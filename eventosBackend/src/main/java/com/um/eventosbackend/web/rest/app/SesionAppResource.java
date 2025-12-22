@@ -1,6 +1,7 @@
 package com.um.eventosbackend.web.rest.app;
 
 import com.um.eventosbackend.service.app.SesionService;
+import com.um.eventosbackend.service.dto.app.SeleccionAsientoRequest;
 import com.um.eventosbackend.service.dto.app.SesionCompra;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
@@ -35,5 +36,16 @@ public class SesionAppResource {
     public ResponseEntity<Void> cerrarSesion(HttpSession session) {
         sessionService.limpiarSesion(session);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/seleccion")
+    public ResponseEntity<SesionCompra> seleccionarAsiento(@RequestBody SeleccionAsientoRequest request, HttpSession session) {
+        try {
+            SesionCompra sesion = sessionService.seleccionarAsiento(session, request);
+            return ResponseEntity.ok(sesion);
+        } catch (RuntimeException e) {
+            // Devolvemos un 400 Bad Request si supera los 4 asientos
+            return ResponseEntity.badRequest().header("X-error-message", e.getMessage()).build();
+        }
     }
 }

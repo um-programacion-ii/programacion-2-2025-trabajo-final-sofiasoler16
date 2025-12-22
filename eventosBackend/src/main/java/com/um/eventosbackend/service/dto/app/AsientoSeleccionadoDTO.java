@@ -7,6 +7,13 @@ public class AsientoSeleccionadoDTO implements Serializable {
     private Integer columna;
     private String nombrePersona;
 
+    public AsientoSeleccionadoDTO() {}
+
+    public AsientoSeleccionadoDTO(Integer fila, Integer columna) {
+        this.fila = fila;
+        this.columna = columna;
+    }
+
     public Integer getFila() { return fila; }
     public void setFila(Integer fila) { this.fila = fila; }
     public Integer getColumna() { return columna; }
