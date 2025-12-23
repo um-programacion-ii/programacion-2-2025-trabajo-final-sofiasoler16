@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+
 @RestController
 @RequestMapping("/api/app")
 public class SesionAppResource {
@@ -18,7 +20,8 @@ public class SesionAppResource {
     }
 
     @PostMapping("/sesion")
-    public ResponseEntity<SesionCompra> crearORenovarSesion(@RequestBody SesionCompra datos, HttpSession session) {
+    public ResponseEntity<SesionCompra> crearORenovarSesion(@RequestBody SesionCompra datos, HttpSession session, Principal principal) {
+        datos.setUsuario(principal.getName());
         SesionCompra sesion = sesionService.renovarSesion(session, datos);
         return ResponseEntity.ok(sesion);
     }
@@ -57,5 +60,17 @@ public class SesionAppResource {
         } catch (Exception e) {
             return ResponseEntity.badRequest().header("X-error-message", e.getMessage()).build();
         }
+    }
+
+    @GetMapping("/sesion/recuperar")
+    public ResponseEntity<SesionCompra> recuperar(HttpSession session, Principal principal) {
+        // Principal trae automáticamente el nombre del usuario logueado por el token
+        String username = principal.getName();
+        SesionCompra sesion = sesionService.recuperarSesionPorUsuario(username, session);
+
+        if (sesion == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(sesion);
     }
 }
