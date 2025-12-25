@@ -1,6 +1,7 @@
 package com.um.eventosbackend.web.rest.app;
 
 import com.um.eventosbackend.service.app.SesionService;
+import com.um.eventosbackend.service.dto.app.AsignarNombreRequest;
 import com.um.eventosbackend.service.dto.app.SeleccionAsientoRequest;
 import com.um.eventosbackend.service.dto.app.SesionCompra;
 import jakarta.servlet.http.HttpSession;
@@ -53,7 +54,7 @@ public class SesionAppResource {
     }
 
     @PostMapping("/bloquear")
-    public ResponseEntity<SesionCompra> bloquearAsientos(HttpSession session) { // Cambiado de 'sesion' a 'session'
+    public ResponseEntity<SesionCompra> bloquearAsientos(HttpSession session) {
         try {
             SesionCompra sesion = sesionService.bloquearAsientosEnSesion(session);
             return ResponseEntity.ok(sesion);
@@ -72,5 +73,15 @@ public class SesionAppResource {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok(sesion);
+    }
+
+    @PostMapping("/nombres")
+    public ResponseEntity<SesionCompra> asignarNombres(@RequestBody AsignarNombreRequest request, HttpSession session) {
+        try {
+            SesionCompra sesion = sesionService.asignarNombreAsiento(session, request);
+            return ResponseEntity.ok(sesion);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().header("X-error-message", e.getMessage()).build();
+        }
     }
 }

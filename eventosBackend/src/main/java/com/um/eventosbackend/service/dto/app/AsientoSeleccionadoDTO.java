@@ -6,6 +6,8 @@ public class AsientoSeleccionadoDTO implements Serializable {
     private Integer fila;
     private Integer columna;
     private String nombrePersona;
+    private String nombre;
+    private String apellido;
 
     public AsientoSeleccionadoDTO() {}
 
@@ -20,4 +22,13 @@ public class AsientoSeleccionadoDTO implements Serializable {
     public void setColumna(Integer columna) { this.columna = columna; }
     public String getNombrePersona() { return nombrePersona; }
     public void setNombrePersona(String nombrePersona) { this.nombrePersona = nombrePersona; }
+    public String getNombre() { return nombre; }
+    public String getApellido() { return apellido; }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+    public void setApellido(String apellido) {
+        this.apellido = apellido;
+    }
 }
