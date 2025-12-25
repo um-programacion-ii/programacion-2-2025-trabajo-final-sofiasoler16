@@ -28,7 +28,10 @@ management:
 spring:
   cloud:
     stream:
-      enabled: false
+      enabled: true
+      kafka:
+        binder:
+          brokers: localhost:9092
   kafka:
     bootstrap-servers: localhost:9092
   task:
