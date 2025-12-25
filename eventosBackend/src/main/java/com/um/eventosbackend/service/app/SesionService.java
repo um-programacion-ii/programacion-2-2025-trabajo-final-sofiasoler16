@@ -2,6 +2,7 @@ package com.um.eventosbackend.service.app;
 
 import com.um.eventosbackend.client.ProxyClient;
 import com.um.eventosbackend.service.dto.app.AsientoSeleccionadoDTO;
+import com.um.eventosbackend.service.dto.app.AsignarNombreRequest;
 import com.um.eventosbackend.service.dto.app.SeleccionAsientoRequest;
 import com.um.eventosbackend.service.dto.app.SesionCompra;
 import jakarta.servlet.http.HttpSession;
@@ -109,5 +110,29 @@ public class SesionService {
             session.setAttribute(SESSION_KEY, sesionGlobal); // La bajamos a la sesión local
         }
         return sesionGlobal;
+    }
+
+    public SesionCompra asignarNombreAsiento(HttpSession session, AsignarNombreRequest request) {
+        SesionCompra sesion = obtenerSesion(session);
+        if (sesion == null) {
+            throw new RuntimeException("No existe una sesión activa");
+        }
+
+        // Buscamos el asiento específico en la lista de la sesión
+        sesion.getAsientos().stream()
+            .filter(a -> a.getFila().equals(request.getFila()) && a.getColumna().equals(request.getColumna()))
+            .findFirst()
+            .ifPresentOrElse(
+                a -> {
+                    a.setNombre(request.getNombre());
+                    a.setApellido(request.getApellido());
+                },
+                () -> { throw new RuntimeException("Asiento no encontrado en la selección"); }
+            );
+
+        // Guardamos los cambios localmente y en Redis
+        session.setAttribute(SESSION_KEY, sesion);
+        sincronizarConRedis(sesion);
+        return sesion;
     }
 }
