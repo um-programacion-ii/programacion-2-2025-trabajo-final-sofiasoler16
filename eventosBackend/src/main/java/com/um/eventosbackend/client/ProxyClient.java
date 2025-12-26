@@ -32,4 +32,28 @@ public class ProxyClient {
             .retrieve()
             .bodyToMono(Map.class);
     }
+
+    public Mono<Map> realizarVenta(Long eventoId, java.util.List<AsientoSeleccionadoDTO> asientos, String token) {
+        Map<String, Object> request = Map.of(
+            "eventoId", eventoId,
+            "asientos", asientos
+        );
+
+        return this.webClient.post()
+            .uri("/proxy/realizar-venta") // Ajusta el path según tu Proxy
+            .header("Authorization", "Bearer " + token)
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(Map.class);
+    }
+
+    // Agrega o modifica este método en ProxyClient.java
+    public Mono<Map> realizarVentaConMapa(Map<String, Object> requestFormateado, String token) {
+        return this.webClient.post()
+            .uri("/proxy/realizar-venta")
+            .header("Authorization", "Bearer " + token)
+            .bodyValue(requestFormateado)
+            .retrieve()
+            .bodyToMono(Map.class);
+    }
 }

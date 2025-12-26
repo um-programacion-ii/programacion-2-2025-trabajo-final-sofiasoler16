@@ -1,6 +1,7 @@
 package com.um.eventosbackend.web.rest.app;
 
 import com.um.eventosbackend.service.app.EventoAppService;
+import com.um.eventosbackend.service.catedra.EventoSyncService;
 import com.um.eventosbackend.service.dto.app.EventoDetalleDTO;
 import com.um.eventosbackend.service.dto.app.EventoResumenDTO;
 import java.util.List;
@@ -13,9 +14,11 @@ import org.springframework.web.bind.annotation.*;
 public class EventoAppResource {
 
     private final EventoAppService eventoAppService;
+    private final EventoSyncService eventoSyncService;
 
-    public EventoAppResource(EventoAppService eventoAppService) {
+    public EventoAppResource(EventoAppService eventoAppService, EventoSyncService eventoSyncService) {
         this.eventoAppService = eventoAppService;
+        this.eventoSyncService = eventoSyncService;
     }
 
 
@@ -31,5 +34,11 @@ public class EventoAppResource {
             .or(() -> eventoAppService.obtenerEvento(id))
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/sync")
+    public ResponseEntity<Void> dispararSincronizacion() {
+        eventoSyncService.syncEventos();
+        return ResponseEntity.ok().build();
     }
 }
