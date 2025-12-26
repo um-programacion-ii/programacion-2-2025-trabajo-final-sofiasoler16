@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -150,7 +152,6 @@ public class SesionService {
         sincronizarConRedis(sesion);
         return sesion;
     }
-
     @Transactional
     public SesionCompra realizarVentaFinal(HttpSession session) {
         SesionCompra sesion = obtenerSesion(session);
@@ -158,69 +159,78 @@ public class SesionService {
             throw new RuntimeException("No hay una sesión de compra válida");
         }
 
-        // 1. Calculamos el monto total y preparamos la fecha
+        // 1. Obtener evento por idCatedra y calcular total
         EventoLocal evento = eventoLocalRepository.findByIdCatedra(sesion.getEventoId())
-            .orElseThrow(() -> new RuntimeException("No existe el evento con ID Cátedra: " + sesion.getEventoId()));
+            .orElseThrow(() -> new RuntimeException("Evento no encontrado: " + sesion.getEventoId()));
+
         java.math.BigDecimal total = evento.getPrecioEntrada().multiply(new java.math.BigDecimal(sesion.getAsientos().size()));
 
-        // 2. Transformamos los asientos al formato "persona" que pide la Cátedra
-        java.util.List<Map<String, Object>> asientosParaCatedra = sesion.getAsientos().stream().map(a -> {
-            Map<String, Object> map = new java.util.HashMap<>();
-            map.put("fila", a.getFila());
-            map.put("columna", a.getColumna());
-            map.put("persona", a.getNombre() + " " + a.getApellido());
-            return map;
-        }).toList();
+        // 2. CREAR VENTA EN ESTADO PENDIENTE (REQUISITO ISSUE #24)
+        VentaLocal venta = new VentaLocal();
+        venta.setEstado(VentaLocal.Estado.PENDIENTE);
+        venta.setMontoTotal(total);
+        venta.setEvento(evento);
+        venta.setUsuario(userRepository.findOneByLogin(sesion.getUsuario()).orElseThrow());
 
-        // 3. Armamos el mapa final para el Proxy
-        Map<String, Object> requestAlProxy = new java.util.HashMap<>();
-        requestAlProxy.put("eventoId", sesion.getEventoId());
-        requestAlProxy.put("fecha", java.time.Instant.now().toString());
-        requestAlProxy.put("precioVenta", total);
-        requestAlProxy.put("asientos", asientosParaCatedra);
+        for (AsientoSeleccionadoDTO dto : sesion.getAsientos()) {
+            AsientoVenta av = new AsientoVenta();
+            av.setFila(dto.getFila());
+            av.setColumna(dto.getColumna());
+            av.setNombre(dto.getNombre());
+            av.setApellido(dto.getApellido());
+            venta.addAsiento(av);
+        }
 
-        // 4. Llamada al Proxy
-        Map respuesta = proxyClient.realizarVentaConMapa(requestAlProxy, tokenCatedra).block();
+        // Guardamos inicialmente como PENDIENTE
+        venta = ventaLocalRepository.save(venta);
 
-        // 5. Persistencia en Postgres (AQUÍ ESTABA EL ERROR)
-        if (respuesta != null && (Boolean.TRUE.equals(respuesta.get("exito")) || Boolean.TRUE.equals(respuesta.get("resultado")))) {
+        // 3. PREPARAR Y ENVIAR AL PROXY
+        try {
+            List<Map<String, Object>> asientosCatedra = sesion.getAsientos().stream().map(a -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("fila", a.getFila());
+                map.put("columna", a.getColumna());
+                map.put("persona", a.getNombre() + " " + a.getApellido()); // Formato cátedra
+                return map;
+            }).toList();
 
-            // --- INICIO BLOQUE FALTANTE ---
-            VentaLocal venta = new VentaLocal(); // Ahora 'venta' sí existe
-            venta.setEstado(VentaLocal.Estado.CONFIRMADA);
-            venta.setMontoTotal(total);
-            venta.setEvento(evento);
-            venta.setUsuario(userRepository.findOneByLogin(sesion.getUsuario()).orElseThrow());
+            Map<String, Object> requestCatedra = new HashMap<>();
+            requestCatedra.put("eventoId", sesion.getEventoId());
+            requestCatedra.put("fecha", java.time.Instant.now().toString());
+            requestCatedra.put("precioVenta", total);
+            requestCatedra.put("asientos", asientosCatedra);
 
-            // Si el proxy devolvió un ID de la cátedra, lo guardamos
-            if (respuesta.get("id") != null) {
-                venta.setIdCatedra(Long.valueOf(respuesta.get("id").toString()));
-            }
+            Map respuesta = proxyClient.realizarVentaConMapa(requestCatedra, tokenCatedra).block();
 
-            // Convertimos los DTOs de la sesión en entidades AsientoVenta
-            for (AsientoSeleccionadoDTO dto : sesion.getAsientos()) {
-                AsientoVenta av = new AsientoVenta();
-                av.setFila(dto.getFila());
-                av.setColumna(dto.getColumna());
-                av.setNombre(dto.getNombre());
-                av.setApellido(dto.getApellido());
-                venta.addAsiento(av); // Esto vincula el asiento a la venta localmente
-            }
+            // 4. ACTUALIZAR SEGÚN RESPUESTA (REQUISITO ISSUE #24)
+            if (respuesta != null && (Boolean.TRUE.equals(respuesta.get("exito")) || Boolean.TRUE.equals(respuesta.get("resultado")))) {
+                venta.setEstado(VentaLocal.Estado.CONFIRMADA); // ÉXITO
+                if (respuesta.get("ventaId") != null) {
+                    venta.setIdCatedra(Long.valueOf(respuesta.get("ventaId").toString()));
+                }
+                ventaLocalRepository.save(venta);
 
-            // Guardamos en Postgres (CascadeType.ALL se encarga de los asientos)
-            ventaLocalRepository.save(venta);
-            // --- FIN BLOQUE FALTANTE ---
-
-            // 6. Limpiar sesión y Redis
-            limpiarSesion(session);
-            if (sesion.getUsuario() != null) {
+                limpiarSesion(session);
                 redisTemplate.delete(getRedisKey(sesion.getUsuario()));
-            }
+                sesion.setEtapaActual("FINALIZADO");
+                return sesion;
+            } else {
+                // RECHAZO DE CÁTEDRA -> FALLIDA
+                venta.setEstado(VentaLocal.Estado.FALLIDA);
+                ventaLocalRepository.save(venta);
 
-            sesion.setEtapaActual("FINALIZADO");
+                // Retornamos la sesión en lugar de lanzar excepción para evitar el Rollback
+                sesion.setEtapaActual("VENTA_RECHAZADA");
+                return sesion;
+            }
+        } catch (Exception e) {
+            // ERROR DE RED/SISTEMA -> FALLIDA
+            venta.setEstado(VentaLocal.Estado.FALLIDA);
+            ventaLocalRepository.save(venta);
+
+            // Retornamos la sesión con el error para persistir el estado FALLIDA
+            sesion.setEtapaActual("ERROR_COMUNICACION");
             return sesion;
-        } else {
-            throw new RuntimeException("La Cátedra rechazó la venta final");
         }
     }
 }

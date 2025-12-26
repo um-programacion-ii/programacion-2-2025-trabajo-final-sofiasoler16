@@ -17,7 +17,8 @@ public class VentaLocal extends AbstractAuditingEntity<Long> implements Serializ
 
     public enum Estado {
         PENDIENTE,
-        CONFIRMADA
+        CONFIRMADA,
+        FALLIDA
     }
 
     @Id
