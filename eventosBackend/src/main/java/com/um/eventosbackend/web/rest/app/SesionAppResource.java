@@ -84,4 +84,14 @@ public class SesionAppResource {
             return ResponseEntity.badRequest().header("X-error-message", e.getMessage()).build();
         }
     }
+
+    @PostMapping("/venta")
+    public ResponseEntity<SesionCompra> realizarVenta(HttpSession session) {
+        try {
+            SesionCompra resultado = sesionService.realizarVentaFinal(session);
+            return ResponseEntity.ok(resultado);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().header("X-error-message", e.getMessage()).build();
+        }
+    }
 }
