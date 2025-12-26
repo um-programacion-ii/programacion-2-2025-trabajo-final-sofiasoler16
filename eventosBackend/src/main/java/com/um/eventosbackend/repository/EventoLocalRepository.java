@@ -18,7 +18,6 @@ public interface EventoLocalRepository extends JpaRepository<EventoLocal, Long> 
     @EntityGraph(attributePaths = {"eventoTipo", "integrantes"})
     List<EventoLocal> findByActivoTrueOrderByFechaAsc();
 
-    // Cambiamos el EntityGraph por una Query con JOIN FETCH para forzar la carga
     @Query("select e from EventoLocal e " +
         "left join fetch e.eventoTipo " +
         "left join fetch e.integrantes " +
