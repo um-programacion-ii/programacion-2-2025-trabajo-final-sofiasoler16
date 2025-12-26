@@ -219,18 +219,51 @@ public class SesionService {
                 venta.setEstado(VentaLocal.Estado.FALLIDA);
                 ventaLocalRepository.save(venta);
 
-                // Retornamos la sesión en lugar de lanzar excepción para evitar el Rollback
+                // Retornamos la sesión
                 sesion.setEtapaActual("VENTA_RECHAZADA");
                 return sesion;
             }
         } catch (Exception e) {
-            // ERROR DE RED/SISTEMA -> FALLIDA
-            venta.setEstado(VentaLocal.Estado.FALLIDA);
+            // ERROR DE RED/SISTEMA -> PENDIENTE
+            venta.setEstado(VentaLocal.Estado.PENDIENTE);
             ventaLocalRepository.save(venta);
 
-            // Retornamos la sesión con el error para persistir el estado FALLIDA
             sesion.setEtapaActual("ERROR_COMUNICACION");
             return sesion;
+        }
+    }
+
+    @Transactional
+    public void reintentarVenta(VentaLocal venta) {
+        try {
+            // 1. Preparamos los datos desde la entidad VentaLocal
+            List<Map<String, Object>> asientosCatedra = venta.getAsientos().stream().map(a -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("fila", a.getFila());
+                map.put("columna", a.getColumna());
+                map.put("persona", a.getNombre() + " " + a.getApellido());
+                return map;
+            }).toList();
+
+            Map<String, Object> requestCatedra = new HashMap<>();
+            requestCatedra.put("eventoId", venta.getEvento().getIdCatedra());
+            requestCatedra.put("fecha", java.time.Instant.now().toString());
+            requestCatedra.put("precioVenta", venta.getMontoTotal());
+            requestCatedra.put("asientos", asientosCatedra);
+
+            // 2. Llamada al Proxy
+            Map respuesta = proxyClient.realizarVentaConMapa(requestCatedra, tokenCatedra).block();
+
+            // 3. Si es exitoso, actualizamos a CONFIRMADA
+            if (respuesta != null && (Boolean.TRUE.equals(respuesta.get("exito")) || Boolean.TRUE.equals(respuesta.get("resultado")))) {
+                venta.setEstado(VentaLocal.Estado.CONFIRMADA);
+                if (respuesta.get("ventaId") != null) {
+                    venta.setIdCatedra(Long.valueOf(respuesta.get("ventaId").toString()));
+                }
+                ventaLocalRepository.save(venta);
+            }
+        } catch (Exception e) {
+            // No hace nada, queda PENDIENTE y vuelve a intentar
         }
     }
 }
