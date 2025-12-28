@@ -1,49 +1,46 @@
 package com.um.eventosmovil
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
-
-import movil_tpfinal.composeapp.generated.resources.Res
-import movil_tpfinal.composeapp.generated.resources.compose_multiplatform
+import androidx.compose.ui.unit.dp
+import com.um.eventosmovil.ui.login.LoginScreen
 
 @Composable
-@Preview
 fun App() {
     MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        // Estado de navegación: Si el token es nulo, estamos en Login
+        var storedToken by remember { mutableStateOf<String?>(null) }
+
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
         ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
+            if (storedToken == null) {
+                LoginScreen(onLoginSuccess = { token ->
+                    storedToken = token
+                })
+            } else {
+                WelcomeScreen(onLogout = { storedToken = null })
             }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
-            }
+        }
+    }
+}
+
+@Composable
+fun WelcomeScreen(onLogout: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("¡Bienvenido!", style = MaterialTheme.typography.headlineMedium)
+        Text("Sesión iniciada correctamente.")
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(onClick = onLogout) {
+            Text("Cerrar Sesión")
         }
     }
 }
