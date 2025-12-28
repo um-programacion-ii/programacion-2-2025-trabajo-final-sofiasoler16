@@ -7,6 +7,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.um.eventosmovil.ui.login.LoginScreen
+import com.um.eventosmovil.ui.eventos.EventoListScreen
 
 @Composable
 fun App() {
@@ -23,24 +24,10 @@ fun App() {
                     storedToken = token
                 })
             } else {
-                WelcomeScreen(onLogout = { storedToken = null })
+                EventoListScreen(
+                    token = storedToken!!,
+                    onNavigateBack = { storedToken = null })
             }
-        }
-    }
-}
-
-@Composable
-fun WelcomeScreen(onLogout: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("¡Bienvenido!", style = MaterialTheme.typography.headlineMedium)
-        Text("Sesión iniciada correctamente.")
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(onClick = onLogout) {
-            Text("Cerrar Sesión")
         }
     }
 }

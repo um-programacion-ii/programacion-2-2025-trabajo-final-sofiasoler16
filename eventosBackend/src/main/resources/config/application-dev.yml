@@ -86,6 +86,7 @@ spring:
 
 server:
   port: 8080
+  address: 0.0.0.0
   # make sure requests the proxy uri instead of the server one
   forward-headers-strategy: native
 
