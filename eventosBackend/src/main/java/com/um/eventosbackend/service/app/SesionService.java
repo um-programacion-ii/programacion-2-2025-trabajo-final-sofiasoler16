@@ -160,7 +160,7 @@ public class SesionService {
         }
 
         // 1. Obtener evento por idCatedra y calcular total
-        EventoLocal evento = eventoLocalRepository.findByIdCatedra(sesion.getEventoId())
+        EventoLocal evento = eventoLocalRepository.findById(sesion.getEventoId())
             .orElseThrow(() -> new RuntimeException("Evento no encontrado: " + sesion.getEventoId()));
 
         java.math.BigDecimal total = evento.getPrecioEntrada().multiply(new java.math.BigDecimal(sesion.getAsientos().size()));
@@ -246,7 +246,7 @@ public class SesionService {
             }).toList();
 
             Map<String, Object> requestCatedra = new HashMap<>();
-            requestCatedra.put("eventoId", venta.getEvento().getIdCatedra());
+            requestCatedra.put("eventoId", venta.getEvento().getId());
             requestCatedra.put("fecha", java.time.Instant.now().toString());
             requestCatedra.put("precioVenta", venta.getMontoTotal());
             requestCatedra.put("asientos", asientosCatedra);

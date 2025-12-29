@@ -6,7 +6,22 @@ import kotlinx.serialization.Serializable
 data class EventoDTO(
     val id: Long,
     val titulo: String,
-    val fecha: String,
     val resumen: String,
-    val imagen: String? = null // Opcional, por si quieres mostrar la imagen después
+    val fecha: String,
+    val imagen: String? = null
+)
+@Serializable
+data class EventoDetalleDTO(
+    val id: Long,
+    val titulo: String,
+    val resumen: String,
+    val descripcion: String,
+    val fecha: String,
+    val direccion: String,
+    val imagen: String? = null,
+    val filasAsientos: Int,
+    val columnasAsientos: Int,
+    val precioEntrada: Double,
+    val tipoNombre: String,
+    val tipoDescripcion: String
 )

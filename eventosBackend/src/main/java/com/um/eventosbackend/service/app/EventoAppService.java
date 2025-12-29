@@ -33,7 +33,7 @@ public class EventoAppService {
     }
 
     public Optional<EventoDetalleDTO> obtenerPorIdCatedra(Long idCatedra) {
-        return eventoLocalRepository.findByIdCatedraAndActivoTrue(idCatedra)
+        return eventoLocalRepository.findByIdAndActivoTrue(idCatedra)
             .map(this::toDetalleDTO);
     }
 

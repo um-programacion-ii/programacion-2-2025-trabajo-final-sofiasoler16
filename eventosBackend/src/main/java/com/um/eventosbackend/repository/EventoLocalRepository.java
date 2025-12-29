@@ -13,8 +13,6 @@ import java.util.Optional;
 @Repository
 public interface EventoLocalRepository extends JpaRepository<EventoLocal, Long> {
 
-    Optional<EventoLocal> findByIdCatedra(Long idCatedra);
-
     @EntityGraph(attributePaths = {"eventoTipo", "integrantes"})
     List<EventoLocal> findByActivoTrueOrderByFechaAsc();
 
@@ -24,9 +22,4 @@ public interface EventoLocalRepository extends JpaRepository<EventoLocal, Long> 
         "where e.id = :id and e.activo = true")
     Optional<EventoLocal> findByIdAndActivoTrue(@Param("id") Long id);
 
-    @Query("select e from EventoLocal e " +
-        "left join fetch e.eventoTipo " +
-        "left join fetch e.integrantes " +
-        "where e.idCatedra = :idCatedra and e.activo = true")
-    Optional<EventoLocal> findByIdCatedraAndActivoTrue(@Param("idCatedra") Long idCatedra);
 }

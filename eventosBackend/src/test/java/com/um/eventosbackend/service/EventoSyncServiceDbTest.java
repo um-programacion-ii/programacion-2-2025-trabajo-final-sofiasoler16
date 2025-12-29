@@ -62,7 +62,7 @@ class EventoSyncServiceDbTest {
         assertThat(guardados).hasSize(1);
 
         var e = guardados.get(0);
-        assertThat(e.getIdCatedra()).isEqualTo(1L);
+        assertThat(e.getId()).isEqualTo(1L);
         assertThat(e.getTitulo()).isEqualTo("Recital");
         assertThat(e.getResumen()).isEqualTo("Resumen");
         assertThat(e.getDescripcion()).isEqualTo("Desc");
@@ -75,7 +75,7 @@ class EventoSyncServiceDbTest {
     void debeActualizarEventoLocalCuandoYaExiste() {
 
         var local = new EventoLocal();
-        local.setIdCatedra(2L);
+        local.setId(2L);
         local.setTitulo("Titulo viejo");
         local.setPrecioEntrada(new BigDecimal("1000"));
         local.setEventoTipo(tipo);
@@ -87,7 +87,7 @@ class EventoSyncServiceDbTest {
 
         eventoSyncService.syncEventos();
 
-        var actualizado = eventoLocalRepository.findByIdCatedra(2L).orElseThrow();
+        var actualizado = eventoLocalRepository.findById(2L).orElseThrow();
         assertThat(actualizado.getTitulo()).isEqualTo("Titulo nuevo");
         assertThat(actualizado.getResumen()).isEqualTo("Nuevo resumen");
         assertThat(actualizado.getDescripcion()).isEqualTo("Nueva desc");
@@ -97,14 +97,14 @@ class EventoSyncServiceDbTest {
     @Test
     void debeEliminarLocalesQueYaNoEstanEnCatedra_porDefecto() {
         var a = new EventoLocal();
-        a.setIdCatedra(10L);
+        a.setId(10L);
         a.setTitulo("A");
         a.setEventoTipo(tipo);
 
         eventoLocalRepository.save(a);
 
         var b = new EventoLocal();
-        b.setIdCatedra(11L);
+        b.setId(11L);
         b.setTitulo("B");
         b.setEventoTipo(tipo);
 
@@ -116,15 +116,15 @@ class EventoSyncServiceDbTest {
 
         eventoSyncService.syncEventos();
 
-        assertThat(eventoLocalRepository.findByIdCatedra(10L)).isPresent();
-        assertThat(eventoLocalRepository.findByIdCatedra(11L)).isEmpty();
+        assertThat(eventoLocalRepository.findById(10L)).isPresent();
+        assertThat(eventoLocalRepository.findById(11L)).isEmpty();
     }
 
     @Test
     void siCatedraFalla_noDebeModificarLaDB() {
         // given
         var local = new EventoLocal();
-        local.setIdCatedra(99L);
+        local.setId(99L);
         local.setTitulo("No tocar");
         local.setEventoTipo(tipo);
 

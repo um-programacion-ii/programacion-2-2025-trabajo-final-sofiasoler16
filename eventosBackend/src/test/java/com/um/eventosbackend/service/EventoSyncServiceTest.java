@@ -78,7 +78,7 @@ class EventoSyncServiceTest {
         when(catedraClient.listarEventos()).thenReturn(List.of(remoto));
 
         when(eventoLocalRepository.findAll()).thenReturn(Collections.emptyList());
-        when(eventoLocalRepository.findByIdCatedra(1L)).thenReturn(Optional.empty());
+        when(eventoLocalRepository.findById(1L)).thenReturn(Optional.empty());
 
         // El service siempre necesita resolver/crear el tipo
         when(eventoTipoLocalRepository.findOneByNombre(anyString())).thenReturn(Optional.empty());
@@ -88,7 +88,7 @@ class EventoSyncServiceTest {
         eventoSyncService.syncEventos();
 
         verify(eventoLocalRepository).save(argThat(local ->
-            local.getIdCatedra().equals(1L)
+            local.getId().equals(1L)
                 && "Evento remoto 1".equals(local.getTitulo())
                 && local.getEventoTipo() != null
                 && "Tipo Evento remoto 1".equals(local.getEventoTipo().getNombre())
@@ -105,11 +105,11 @@ class EventoSyncServiceTest {
 
         EventoLocal existente = new EventoLocal();
         existente.id(10L);
-        existente.idCatedra(2L);
+        existente.id(2L);
         existente.titulo("Titulo viejo");
 
         when(eventoLocalRepository.findAll()).thenReturn(List.of(existente));
-        when(eventoLocalRepository.findByIdCatedra(2L)).thenReturn(Optional.of(existente));
+        when(eventoLocalRepository.findById(2L)).thenReturn(Optional.of(existente));
 
         EventoTipoLocal tipoExistente = new EventoTipoLocal();
         tipoExistente.setNombre("Tipo Titulo nuevo");
@@ -134,7 +134,7 @@ class EventoSyncServiceTest {
 
         EventoLocal local = new EventoLocal();
         local.id(100L);
-        local.idCatedra(5L);
+        local.id(5L);
         local.titulo("Evento obsoleto");
 
         when(eventoLocalRepository.findAll()).thenReturn(List.of(local));

@@ -1,6 +1,7 @@
 package com.um.eventosmovil.ui.eventos
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.um.eventosmovil.data.EventoDTO
 import com.um.eventosmovil.viewModel.EventListState
 import com.um.eventosmovil.viewModel.EventListViewModel
 import movil_tpfinal.composeapp.generated.resources.Res
@@ -22,7 +24,8 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun EventoListScreen(
     token: String,
-    onNavigateBack: () -> Unit // 1. Parámetro para manejar la acción de volver
+    onNavigateBack: () -> Unit, // 1. Parámetro para manejar la acción de volver
+    onEventClick: (EventoDTO) -> Unit
 ) {
     val viewModel: EventListViewModel = viewModel { EventListViewModel(token) }
     val state by viewModel.state.collectAsState()
@@ -82,7 +85,7 @@ fun EventoListScreen(
                             items(current.eventos) { evento ->
                                 // Aquí mantenemos tus tarjetas color lila que configuramos antes
                                 Card(
-                                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { onEventClick(evento) },
                                     colors = CardDefaults.cardColors(
                                         containerColor = Color(0xFFE1BEE7) // Lila clarito
                                     ),
