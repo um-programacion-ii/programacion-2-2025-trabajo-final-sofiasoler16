@@ -41,4 +41,15 @@ public class EventoAppResource {
         eventoSyncService.syncEventos();
         return ResponseEntity.ok().build();
     }
+
+    // En EventoAppResource.java
+    @GetMapping("/{id}/asientos")
+    public ResponseEntity<Object> obtenerAsientos(
+        @PathVariable Long id,
+        @RequestParam Integer filas,
+        @RequestParam Integer columnas
+    ) {
+        // Le pedimos al service que busque la matriz en el proxy
+        return ResponseEntity.ok(eventoAppService.obtenerMapaAsientos(id, filas, columnas));
+    }
 }

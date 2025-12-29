@@ -2,6 +2,7 @@ package com.um.eventosmovil.service
 
 import com.um.eventosmovil.data.EventoDTO
 import com.um.eventosmovil.data.EventoDetalleDTO
+import com.um.eventosmovil.data.MapaAsientosResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -48,6 +49,19 @@ class EventoService(private val token: String) {
             } else {
                 Result.failure(Exception("Error: ${response.status}"))
             }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getMapaAsientos(eventId: Long, filas: Int, columnas: Int): Result<MapaAsientosResponse> {
+        return try {
+            val response = client.get("http://10.0.2.2:8080/api/app/eventos/$eventId/asientos") {
+                parameter("filas", filas)
+                parameter("columnas", columnas)
+                header(HttpHeaders.Authorization, "Bearer $token")
+            }
+            Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)
         }
