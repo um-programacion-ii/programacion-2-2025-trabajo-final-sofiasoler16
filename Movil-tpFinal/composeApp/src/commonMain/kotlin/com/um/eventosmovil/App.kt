@@ -70,7 +70,7 @@ fun App() {
                                 service.realizarVenta(listaFinal).onSuccess {
                                     isAssigningNames = false
                                     selectedEventId = null
-                                    showSuccessDialog = true
+                                    showSuccessDialog = true // Muestra exito
                                 }.onFailure {
                                     showErrorMessage = it.message ?: "Error al procesar la venta"
                                 }
