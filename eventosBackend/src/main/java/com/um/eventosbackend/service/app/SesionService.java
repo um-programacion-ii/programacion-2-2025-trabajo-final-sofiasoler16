@@ -266,4 +266,49 @@ public class SesionService {
             // No hace nada, queda PENDIENTE y vuelve a intentar
         }
     }
+
+
+    public SesionCompra bloquearAsientosDirecto(HttpSession session, Long eventoId, List<AsientoSeleccionadoDTO> asientos, String username) {
+        // 1. Buscamos si ya existe una sesión en Redis para este usuario
+        SesionCompra sesion = recuperarSesionPorUsuario(username, session);
+
+        // 2. Si no existe, creamos una nueva
+        if (sesion == null) {
+            sesion = new SesionCompra();
+            sesion.setUsuario(username);
+        }
+
+        sesion.setEventoId(eventoId);
+        sesion.getAsientos().clear();
+        sesion.getAsientos().addAll(asientos);
+        sesion.setEtapaActual("DATOS_PERSONALES");
+
+        // 3. Bloqueamos en la cátedra
+        Map resultado = proxyClient.bloquearAsientos(eventoId, asientos, tokenCatedra).block();
+
+        boolean esExitoso = (resultado != null) && (
+            Boolean.TRUE.equals(resultado.get("creado")) ||
+                Boolean.TRUE.equals(resultado.get("resultado"))
+        );
+
+        if (esExitoso) {
+            sincronizarConRedis(sesion); // Guardamos en Redis para el próximo paso
+            session.setAttribute(SESSION_KEY, sesion);
+            return sesion;
+        } else {
+            throw new RuntimeException("Cátedra no pudo bloquear los asientos");
+        }
+    }
+
+    public SesionCompra realizarVentaFinalDirecta(HttpSession session, List<AsientoSeleccionadoDTO> asientosConNombres, String username) {
+        SesionCompra sesion = recuperarSesionPorUsuario(username, session);
+        if (sesion == null) throw new RuntimeException("No hay sesión activa");
+
+        // Actualizamos los nombres en la sesión
+        sesion.setAsientos(asientosConNombres);
+        session.setAttribute(SESSION_KEY, sesion);
+
+        // Llamamos a tu lógica de venta que ya habla con el Proxy y guarda en la DB local
+        return realizarVentaFinal(session);
+    }
 }

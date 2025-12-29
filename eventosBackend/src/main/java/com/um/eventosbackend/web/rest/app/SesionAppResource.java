@@ -1,6 +1,7 @@
 package com.um.eventosbackend.web.rest.app;
 
 import com.um.eventosbackend.service.app.SesionService;
+import com.um.eventosbackend.service.dto.app.AsientoSeleccionadoDTO;
 import com.um.eventosbackend.service.dto.app.AsignarNombreRequest;
 import com.um.eventosbackend.service.dto.app.SeleccionAsientoRequest;
 import com.um.eventosbackend.service.dto.app.SesionCompra;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/app")
@@ -53,10 +55,31 @@ public class SesionAppResource {
         }
     }
 
+
+//    @PostMapping("/bloquear")
+//    public ResponseEntity<SesionCompra> bloquearAsientos(@RequestBody BloqueoRequestResource request, HttpSession session) {
+//        try {
+//            SesionCompra sesion = sesionService.bloquearAsientosDirecto(session, request.getEventoId(), request.getAsientos());
+//            return ResponseEntity.ok(sesion);
+//        } catch (Exception e) {
+//            return ResponseEntity.badRequest().header("X-error-message", e.getMessage()).build();
+//        }
+//    }
+
     @PostMapping("/bloquear")
-    public ResponseEntity<SesionCompra> bloquearAsientos(HttpSession session) {
+    public ResponseEntity<SesionCompra> bloquearAsientos(
+        @RequestBody BloqueoRequestResource request,
+        HttpSession session,
+        Principal principal
+    ) {
         try {
-            SesionCompra sesion = sesionService.bloquearAsientosEnSesion(session);
+            // Pasamos el nombre del usuario al service
+            SesionCompra sesion = sesionService.bloquearAsientosDirecto(
+                session,
+                request.getEventoId(),
+                request.getAsientos(),
+                principal.getName()
+            );
             return ResponseEntity.ok(sesion);
         } catch (Exception e) {
             return ResponseEntity.badRequest().header("X-error-message", e.getMessage()).build();
@@ -84,14 +107,21 @@ public class SesionAppResource {
             return ResponseEntity.badRequest().header("X-error-message", e.getMessage()).build();
         }
     }
+    
 
     @PostMapping("/venta")
-    public ResponseEntity<SesionCompra> realizarVenta(HttpSession session) {
+    public ResponseEntity<SesionCompra> realizarVenta(
+        @RequestBody List<AsientoSeleccionadoDTO> asientosConNombres, // Recibimos los nombres
+        HttpSession session,
+        Principal principal
+    ) {
         try {
-            SesionCompra resultado = sesionService.realizarVentaFinal(session);
+            // Pasamos los datos al service para que actualice la sesión antes de comprar
+            SesionCompra resultado = sesionService.realizarVentaFinalDirecta(session, asientosConNombres, principal.getName());
             return ResponseEntity.ok(resultado);
         } catch (Exception e) {
             return ResponseEntity.badRequest().header("X-error-message", e.getMessage()).build();
         }
     }
 }
+

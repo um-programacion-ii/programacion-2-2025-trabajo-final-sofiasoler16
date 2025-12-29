@@ -49,4 +49,15 @@ class SeatSelectionViewModel(private val service: EventoService, private val eve
             _state.value = currentState.copy(seleccionados = seleccionados.toSet())
         }
     }
+
+    fun confirmarSeleccion(onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            // Llamamos al endpoint de bloqueo que definiste en SesionService
+            service.bloquearAsientos(eventId, seleccionados.toList()).onSuccess {
+                onSuccess() // Si el backend bloqueó bien, vamos a la carga de nombres
+            }.onFailure { exception ->
+                onError(exception.message ?: "Error al conectar con el servidor")
+            }
+        }
+    }
 }

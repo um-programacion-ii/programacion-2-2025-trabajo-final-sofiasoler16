@@ -34,4 +34,19 @@ data class MapaAsientosResponse(
     val matriz: List<List<String>>
 )
 
+@Serializable
 data class AsientoPosicion(val fila: Int, val columna: Int)
+
+@Serializable
+data class AsientoDTO(
+    val fila: Int,
+    val columna: Int,
+    val nombre: String? = null,
+    val apellido: String? = null
+)
+
+@Serializable
+data class BloqueoRequest(
+    val eventoId: Long,
+    val asientos: List<AsientoPosicion>
+)

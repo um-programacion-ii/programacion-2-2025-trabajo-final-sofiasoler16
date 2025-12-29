@@ -1,5 +1,8 @@
 package com.um.eventosmovil.service
 
+import com.um.eventosmovil.data.AsientoDTO
+import com.um.eventosmovil.data.AsientoPosicion
+import com.um.eventosmovil.data.BloqueoRequest
 import com.um.eventosmovil.data.EventoDTO
 import com.um.eventosmovil.data.EventoDetalleDTO
 import com.um.eventosmovil.data.MapaAsientosResponse
@@ -65,5 +68,37 @@ class EventoService(private val token: String) {
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    suspend fun bloquearAsientos(eventId: Long, asientos: List<AsientoPosicion>): Result<Unit> {
+        return try {
+            val response = client.post("http://10.0.2.2:8080/api/app/bloquear") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                contentType(ContentType.Application.Json)
+
+                setBody(BloqueoRequest(eventId, asientos))
+            }
+
+            if (response.status == HttpStatusCode.OK) {
+                Result.success(Unit)
+            } else {
+                val errorMsg = response.headers["X-error-message"] ?: "Error desconocido (${response.status})"
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun realizarVenta(asientos: List<AsientoDTO>): Result<Unit> {
+        return try {
+            val response = client.post("http://10.0.2.2:8080/api/app/venta") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                contentType(ContentType.Application.Json)
+                setBody(asientos)
+            }
+            if (response.status == HttpStatusCode.OK) Result.success(Unit)
+            else Result.failure(Exception("Error en la venta"))
+        } catch (e: Exception) { Result.failure(e) }
     }
 }
