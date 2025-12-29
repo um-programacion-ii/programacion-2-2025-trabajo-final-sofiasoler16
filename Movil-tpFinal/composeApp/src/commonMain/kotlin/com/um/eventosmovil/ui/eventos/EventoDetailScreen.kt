@@ -24,7 +24,8 @@ import androidx.compose.runtime.collectAsState
 fun EventoDetailScreen(
     token: String,
     eventId: Long,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onViewSeats: () -> Unit
 ) {
 // Agrega una Key (llave unica) para no reutilizar el mismo viewModel y ver distintos eventosDetail
     val viewModel: EventDetailViewModel = viewModel(key = eventId.toString()) {
@@ -75,7 +76,7 @@ fun EventoDetailScreen(
 
                                 Spacer(modifier = Modifier.height(24.dp))
                                 Button(
-                                    onClick = { /* Próximo Issue: Selección de asientos */ },
+                                    onClick = onViewSeats,
                                     modifier = Modifier.fillMaxWidth(),
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6750A4))
                                 ) {

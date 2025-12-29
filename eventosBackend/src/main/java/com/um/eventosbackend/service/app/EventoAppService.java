@@ -16,9 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class EventoAppService {
 
     private final EventoLocalRepository eventoLocalRepository;
+    private final com.um.eventosbackend.client.ProxyClient proxyClient;
 
-    public EventoAppService(EventoLocalRepository eventoLocalRepository) {
+    @org.springframework.beans.factory.annotation.Value("${catedra.api-token}")
+    private String tokenCatedra;
+
+    public EventoAppService(EventoLocalRepository eventoLocalRepository, com.um.eventosbackend.client.ProxyClient proxyClient) {
         this.eventoLocalRepository = eventoLocalRepository;
+        this.proxyClient = proxyClient;
     }
 
     public List<EventoResumenDTO> listarEventos() {
@@ -66,5 +71,10 @@ public class EventoAppService {
         }
 
         return dto;
+    }
+
+    public Object obtenerMapaAsientos(Long id, Integer filas, Integer columnas) {
+        // Llamamos al proxy y bloqueamos hasta tener la respuesta (igual que en SesionService)
+        return proxyClient.obtenerMapaAsientos(id, filas, columnas, tokenCatedra).block();
     }
 }

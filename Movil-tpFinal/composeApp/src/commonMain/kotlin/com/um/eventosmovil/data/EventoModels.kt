@@ -25,3 +25,13 @@ data class EventoDetalleDTO(
     val tipoNombre: String,
     val tipoDescripcion: String
 )
+
+@Serializable
+data class MapaAsientosResponse(
+    val eventoId: Long,
+    val filas: Int,
+    val columnas: Int,
+    val matriz: List<List<String>>
+)
+
+data class AsientoPosicion(val fila: Int, val columna: Int)
