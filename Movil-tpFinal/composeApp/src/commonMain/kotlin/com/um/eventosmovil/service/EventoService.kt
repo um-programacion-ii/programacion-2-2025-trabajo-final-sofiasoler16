@@ -6,6 +6,7 @@ import com.um.eventosmovil.data.BloqueoRequest
 import com.um.eventosmovil.data.EventoDTO
 import com.um.eventosmovil.data.EventoDetalleDTO
 import com.um.eventosmovil.data.MapaAsientosResponse
+import com.um.eventosmovil.data.VentaDTO
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -100,5 +101,20 @@ class EventoService(private val token: String) {
             if (response.status == HttpStatusCode.OK) Result.success(Unit)
             else Result.failure(Exception("Error en la venta"))
         } catch (e: Exception) { Result.failure(e) }
+    }
+
+    suspend fun getMisVentas(): Result<List<VentaDTO>> {
+        return try {
+            val response = client.get("http://10.0.2.2:8080/api/app/mis-ventas") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+            }
+            if (response.status == HttpStatusCode.OK) {
+                Result.success(response.body())
+            } else {
+                Result.failure(Exception("Error al obtener ventas"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

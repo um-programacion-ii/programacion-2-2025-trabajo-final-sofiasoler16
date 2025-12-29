@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -59,5 +60,17 @@ public class ProxyController {
                     }
                     return ResponseEntity.status(response.getStatusCode()).body(body);
                 });
+    }
+    @GetMapping("/ventas")
+    public Mono<ResponseEntity<List<Map>>> listarVentas(@RequestHeader("Authorization") String authHeader) {
+        return this.webClient.get()
+                .uri("/api/endpoints/v1/listar-ventas") // La URL real de la cátedra
+                .header("Authorization", authHeader)
+                .retrieve()
+                .onStatus(status -> status.isError(), clientResponse -> {
+                    return clientResponse.bodyToMono(String.class)
+                            .flatMap(errorBody -> Mono.error(new RuntimeException("Cátedra dice: " + errorBody)));
+                })
+                .toEntityList(Map.class);
     }
 }

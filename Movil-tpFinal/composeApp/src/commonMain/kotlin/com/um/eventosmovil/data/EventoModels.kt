@@ -50,3 +50,14 @@ data class BloqueoRequest(
     val eventoId: Long,
     val asientos: List<AsientoPosicion>
 )
+
+@Serializable
+data class VentaDTO(
+    val eventoId: Long,
+    val ventaId: Long,
+    val fechaVenta: String,
+    val resultado: Boolean,
+    val descripcion: String,
+    val precioVenta: Double,
+    val cantidadAsientos: Int
+)

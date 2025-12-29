@@ -10,6 +10,7 @@ import com.um.eventosmovil.service.EventoService
 import com.um.eventosmovil.ui.login.LoginScreen
 import com.um.eventosmovil.ui.eventos.EventoListScreen
 import com.um.eventosmovil.ui.eventos.EventoDetailScreen
+import com.um.eventosmovil.ui.eventos.MyPurchasesScreen
 import com.um.eventosmovil.ui.eventos.NameAssignmentScreen
 import com.um.eventosmovil.ui.eventos.SeatSelectionScreen
 import kotlinx.coroutines.launch
@@ -23,11 +24,20 @@ fun App() {
         var isAssigningNames by remember { mutableStateOf(false) }
         var seleccionTemporal by remember { mutableStateOf<List<AsientoPosicion>>(emptyList()) }
         val scope = rememberCoroutineScope()
+        var isViewingPurchases by remember { mutableStateOf(false) }
 
         Surface(modifier = Modifier.fillMaxSize()) {
             when {
                 storedToken == null -> {
                     LoginScreen(onLoginSuccess = { token -> storedToken = token })
+                }
+
+                // 1. PRIORIDAD: Si está viendo compras, mostrar esa pantalla
+                isViewingPurchases -> {
+                    MyPurchasesScreen(
+                        token = storedToken!!,
+                        onNavigateBack = { isViewingPurchases = false }
+                    )
                 }
 
                 selectedEventId != null && isAssigningNames -> {
@@ -37,7 +47,6 @@ fun App() {
                             scope.launch {
                                 val service = EventoService(storedToken!!)
                                 service.realizarVenta(listaFinal).onSuccess {
-                                    // SI venta exitosa, vuelvo a listar eventos
                                     isAssigningNames = false
                                     selectedEventId = null
                                 }.onFailure {
@@ -65,7 +74,8 @@ fun App() {
                     EventoListScreen(
                         token = storedToken!!,
                         onNavigateBack = { storedToken = null },
-                        onEventClick = { evento -> selectedEventId = evento.id }
+                        onEventClick = { evento -> selectedEventId = evento.id },
+                        onViewPurchases = { isViewingPurchases = true }
                     )
                 }
                 // PANTALLA LISTA EVENTOS
