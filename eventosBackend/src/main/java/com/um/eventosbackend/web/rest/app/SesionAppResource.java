@@ -5,21 +5,27 @@ import com.um.eventosbackend.service.dto.app.AsientoSeleccionadoDTO;
 import com.um.eventosbackend.service.dto.app.AsignarNombreRequest;
 import com.um.eventosbackend.service.dto.app.SeleccionAsientoRequest;
 import com.um.eventosbackend.service.dto.app.SesionCompra;
+import com.um.eventosbackend.client.ProxyClient;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/app")
 public class SesionAppResource {
 
     private final SesionService sesionService;
+    private final ProxyClient proxyClient;
 
-    public SesionAppResource(SesionService sessionService) {
+    public SesionAppResource(SesionService sessionService, ProxyClient proxyClient) {
         this.sesionService = sessionService;
+        this.proxyClient = proxyClient;
     }
 
     @PostMapping("/sesion")
@@ -107,7 +113,7 @@ public class SesionAppResource {
             return ResponseEntity.badRequest().header("X-error-message", e.getMessage()).build();
         }
     }
-    
+
 
     @PostMapping("/venta")
     public ResponseEntity<SesionCompra> realizarVenta(
@@ -122,6 +128,12 @@ public class SesionAppResource {
         } catch (Exception e) {
             return ResponseEntity.badRequest().header("X-error-message", e.getMessage()).build();
         }
+    }
+
+    @GetMapping("/mis-ventas")
+    public ResponseEntity<List<Map>> listarVentas(@Value("${catedra.api-token}") String tokenCatedra) {
+        List<Map> ventas = proxyClient.obtenerMisVentas(tokenCatedra).block();
+        return ResponseEntity.ok(ventas);
     }
 }
 

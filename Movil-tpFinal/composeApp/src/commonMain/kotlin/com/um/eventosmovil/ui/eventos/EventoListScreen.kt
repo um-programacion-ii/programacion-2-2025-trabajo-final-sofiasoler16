@@ -24,8 +24,9 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun EventoListScreen(
     token: String,
-    onNavigateBack: () -> Unit, // 1. Parámetro para manejar la acción de volver
-    onEventClick: (EventoDTO) -> Unit
+    onNavigateBack: () -> Unit,
+    onEventClick: (EventoDTO) -> Unit,
+    onViewPurchases: () -> Unit // Parámetro para abrir Issue #69
 ) {
     val viewModel: EventListViewModel = viewModel { EventListViewModel(token) }
     val state by viewModel.state.collectAsState()
@@ -33,9 +34,7 @@ fun EventoListScreen(
     val topAppBarViolet = Color(0xFF6750A4)
     val onTopAppBarViolet = Color.White
 
-    // 2. Usamos un Box principal para apilar el fondo y el contenido
     Box(modifier = Modifier.fillMaxSize()) {
-        // CAPA 1 (Fondo): La Imagen
         Image(
             painter = painterResource(Res.drawable.fondo2),
             contentDescription = null,
@@ -43,23 +42,25 @@ fun EventoListScreen(
             contentScale = ContentScale.Crop
         )
 
-        // CAPA 2 (Frente): El Scaffold con la UI
         Scaffold(
-            // Hacemos el fondo del Scaffold transparente para ver la imagen de atrás
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
                     title = {
                         Text("Próximos Eventos", color = onTopAppBarViolet)
                     },
-                    // 3. Agregamos el icono de navegación a la izquierda
+                    // BOTON ATRAS
                     navigationIcon = {
-                        // Reemplazo total del icono por un botón de texto
                         TextButton(onClick = { onNavigateBack() }) {
                             Text("< Atrás", color = Color.White)
                         }
                     },
-                    // 4. Colores de la TopBar (Fondo violeta)
+                    // BOTÓN DE "MIS COMPRAS" A LA DERECHA
+                    actions = {
+                        TextButton(onClick = { onViewPurchases() }) {
+                            Text("Mis Compras", color = Color.White)
+                        }
+                    },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = topAppBarViolet,
                         scrolledContainerColor = topAppBarViolet
@@ -80,14 +81,13 @@ fun EventoListScreen(
                     is EventListState.Success -> {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp) // Padding alrededor de la lista
+                            contentPadding = PaddingValues(16.dp)
                         ) {
                             items(current.eventos) { evento ->
-                                // Aquí mantenemos tus tarjetas color lila que configuramos antes
                                 Card(
                                     modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { onEventClick(evento) },
                                     colors = CardDefaults.cardColors(
-                                        containerColor = Color(0xFFE1BEE7) // Lila clarito
+                                        containerColor = Color(0xFFE1BEE7)
                                     ),
                                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                                 ) {
@@ -95,7 +95,7 @@ fun EventoListScreen(
                                         Text(
                                             text = evento.titulo,
                                             style = MaterialTheme.typography.titleLarge,
-                                            color = Color(0xFF4A148C) // Violeta oscuro
+                                            color = Color(0xFF4A148C)
                                         )
                                         Text(text = evento.fecha, style = MaterialTheme.typography.bodySmall)
                                         Spacer(modifier = Modifier.height(8.dp))
