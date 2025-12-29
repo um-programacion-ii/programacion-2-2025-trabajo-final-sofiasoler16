@@ -25,11 +25,32 @@ fun App() {
         var seleccionTemporal by remember { mutableStateOf<List<AsientoPosicion>>(emptyList()) }
         val scope = rememberCoroutineScope()
         var isViewingPurchases by remember { mutableStateOf(false) }
+        var showSuccessDialog by remember { mutableStateOf(false) }
+        var showErrorMessage by remember { mutableStateOf<String?>(null) }
 
         Surface(modifier = Modifier.fillMaxSize()) {
             when {
                 storedToken == null -> {
-                    LoginScreen(onLoginSuccess = { token -> storedToken = token })
+                    LoginScreen(onLoginSuccess = { token ->
+                        storedToken = token
+                        scope.launch {
+                            val service = EventoService(token)
+                            service.recuperarSesion().onSuccess { sesion ->
+                                if (sesion != null) {
+                                    // REANUDAMOS
+                                    selectedEventId = sesion.eventoId
+                                    seleccionTemporal = sesion.asientos.map { AsientoPosicion(it.fila, it.columna) }
+
+                                    if (sesion.etapaActual == "DATOS_PERSONALES") {
+                                        isAssigningNames = true
+                                        isSelectingSeats = false
+                                    } else {
+                                        isSelectingSeats = true
+                                    }
+                                }
+                            }
+                        }
+                    })
                 }
 
                 // 1. PRIORIDAD: Si está viendo compras, mostrar esa pantalla
@@ -49,8 +70,9 @@ fun App() {
                                 service.realizarVenta(listaFinal).onSuccess {
                                     isAssigningNames = false
                                     selectedEventId = null
+                                    showSuccessDialog = true
                                 }.onFailure {
-                                    println("Error en la compra: ${it.message}")
+                                    showErrorMessage = it.message ?: "Error al procesar la venta"
                                 }
                             }
                         }
@@ -87,6 +109,31 @@ fun App() {
                         onViewSeats = { isSelectingSeats = true }
                     )
                 }
+            }
+            if (showSuccessDialog) {
+                AlertDialog(
+                    onDismissRequest = { showSuccessDialog = false },
+                    title = { Text("¡Compra Exitosa!") },
+                    text = { Text("Tus entradas han sido reservadas con éxito. Puedes verlas en 'Mis Compras'.") },
+                    confirmButton = {
+                        Button(onClick = { showSuccessDialog = false }) {
+                            Text("Aceptar")
+                        }
+                    }
+                )
+            }
+
+            if (showErrorMessage != null) {
+                AlertDialog(
+                    onDismissRequest = { showErrorMessage = null },
+                    title = { Text("Hubo un problema") },
+                    text = { Text(showErrorMessage!!) },
+                    confirmButton = {
+                        Button(onClick = { showErrorMessage = null }) {
+                            Text("Cerrar")
+                        }
+                    }
+                )
             }
         }
     }

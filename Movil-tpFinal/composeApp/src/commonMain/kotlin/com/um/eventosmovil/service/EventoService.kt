@@ -6,6 +6,7 @@ import com.um.eventosmovil.data.BloqueoRequest
 import com.um.eventosmovil.data.EventoDTO
 import com.um.eventosmovil.data.EventoDetalleDTO
 import com.um.eventosmovil.data.MapaAsientosResponse
+import com.um.eventosmovil.data.SesionCompraDTO
 import com.um.eventosmovil.data.VentaDTO
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -112,6 +113,23 @@ class EventoService(private val token: String) {
                 Result.success(response.body())
             } else {
                 Result.failure(Exception("Error al obtener ventas"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun recuperarSesion(): Result<SesionCompraDTO?> {
+        return try {
+            val response = client.get("http://10.0.2.2:8080/api/app/sesion/recuperar") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+            }
+            if (response.status == HttpStatusCode.OK) {
+                Result.success(response.body())
+            } else if (response.status == HttpStatusCode.NoContent) {
+                Result.success(null) // No hay sesión previa
+            } else {
+                Result.failure(Exception("Error al recuperar sesión"))
             }
         } catch (e: Exception) {
             Result.failure(e)
