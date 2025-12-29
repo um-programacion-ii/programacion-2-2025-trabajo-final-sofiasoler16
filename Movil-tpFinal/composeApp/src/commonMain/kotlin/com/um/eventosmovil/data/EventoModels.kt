@@ -61,3 +61,11 @@ data class VentaDTO(
     val precioVenta: Double,
     val cantidadAsientos: Int
 )
+
+@Serializable
+data class SesionCompraDTO(
+    val usuario: String,
+    val eventoId: Long,
+    val etapaActual: String, // "DATOS_PERSONALES", etc.
+    val asientos: List<AsientoDTO>
+)
