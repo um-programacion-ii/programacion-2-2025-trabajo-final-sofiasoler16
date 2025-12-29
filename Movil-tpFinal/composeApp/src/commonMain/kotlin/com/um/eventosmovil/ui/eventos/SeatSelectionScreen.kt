@@ -24,12 +24,17 @@ import com.um.eventosmovil.viewModel.SeatState
 fun SeatSelectionScreen(
     token: String,
     eventId: Long,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onConfirmSelection: (List<AsientoPosicion>) -> Unit
 ) {
     val viewModel: SeatSelectionViewModel = viewModel(key = eventId.toString()) {
         SeatSelectionViewModel(EventoService(token), eventId)
     }
     val state by viewModel.state.collectAsState()
+
+    // --- NUEVOS ESTADOS PARA QUE VEAS QUÉ PASA --- [cite: 2025-12-29]
+    var estaCargando by remember { mutableStateOf(false) }
+    var mensajeErrorUI by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -61,8 +66,26 @@ fun SeatSelectionScreen(
                         Text("Mapa de Asientos", style = MaterialTheme.typography.titleLarge)
                         Text("Seleccionados: ${current.seleccionados.size} / 4", style = MaterialTheme.typography.bodyMedium)
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
+                        // --- MENSAJE DE ERROR VISIBLE EN EL CELULAR --- [cite: 2025-12-29]
+                        if (mensajeErrorUI != null) {
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Color.Red.copy(alpha = 0.1f)),
+                                modifier = Modifier.padding(8.dp)
+                            ) {
+                                Text(
+                                    text = mensajeErrorUI!!,
+                                    color = Color.Red,
+                                    modifier = Modifier.padding(8.dp),
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Dibujo de la Matriz
                         for (f in 0 until current.mapa.filas) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -72,12 +95,11 @@ fun SeatSelectionScreen(
                                     val estado = current.mapa.matriz[f][c]
                                     val esSeleccionado = current.seleccionados.contains(AsientoPosicion(f, c))
 
-                                    // Colores según estado solicitado en el Issue #30
                                     val colorAsiento = when {
-                                        esSeleccionado -> Color(0xFF6750A4) // Violeta (Selección)
+                                        esSeleccionado -> Color(0xFF6750A4)
                                         estado == "VENDIDO" -> Color.Red
-                                        estado == "BLOQUEADO" -> Color(0xFFFF9800) // Naranja
-                                        else -> Color.LightGray // LIBRE
+                                        estado == "BLOQUEADO" -> Color(0xFFFF9800)
+                                        else -> Color.LightGray
                                     }
 
                                     Box(
@@ -98,13 +120,31 @@ fun SeatSelectionScreen(
 
                         Spacer(modifier = Modifier.height(32.dp))
 
-                        Button(
-                            onClick = { /* Próximo: Ir a confirmación de nombres */ },
-                            enabled = current.seleccionados.isNotEmpty(),
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6750A4))
-                        ) {
-                            Text("Confirmar Selección")
+                        // --- INDICADOR DE CARGA O BOTÓN --- [cite: 2025-12-29]
+                        if (estaCargando) {
+                            CircularProgressIndicator(color = Color(0xFF6750A4))
+                        } else {
+                            Button(
+                                onClick = {
+                                    estaCargando = true
+                                    mensajeErrorUI = null
+                                    viewModel.confirmarSeleccion(
+                                        onSuccess = {
+                                            estaCargando = false
+                                            onConfirmSelection(current.seleccionados.toList())
+                                        },
+                                        onError = { mensaje ->
+                                            estaCargando = false
+                                            mensajeErrorUI = "Error: $mensaje"
+                                        }
+                                    )
+                                },
+                                enabled = current.seleccionados.isNotEmpty(),
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6750A4))
+                            ) {
+                                Text("Confirmar Selección")
+                            }
                         }
                     }
                 }
