@@ -67,18 +67,22 @@ public class EventoSyncService {
         for (CatedraEventoDetalleDTO remoto : eventosRemotos) {
             Long idCatedra = remoto.getId();
 
-            EventoLocal eventoLocal = eventoLocalRepository
-                .findByIdCatedra(idCatedra)
-                .orElseGet(EventoLocal::new);
+            // Buscamos por el ID real (que ahora es el de la cátedra)
+            EventoLocal eventoLocal = eventoLocalRepository.findById(idCatedra)
+                .orElseGet(() -> {
+                    EventoLocal nuevo = new EventoLocal();
+                    nuevo.setId(idCatedra); // ASIGNACIÓN MANUAL DEL ID
+                    return nuevo;
+                });
 
-            boolean esNuevo = eventoLocal.getId() == null;
+            boolean esNuevo = (eventoLocal.getTitulo() == null); // Detectamos si es nuevo por campos vacíos
 
             mapearDesdeCatedra(remoto, eventoLocal);
 
             if (esNuevo) {
-                log.info("Creando evento_local nuevo para idCatedra={}", idCatedra);
+                log.info("Creando evento_local con ID de cátedra: {}", idCatedra);
             } else {
-                log.info("Actualizando evento_local existente id={} (idCatedra={})", eventoLocal.getId(), idCatedra);
+                log.info("Actualizando evento_local existente ID: {}", idCatedra);
             }
 
             eventoLocalRepository.save(eventoLocal);
@@ -86,28 +90,19 @@ public class EventoSyncService {
 
         // Bajas
         if (deleteMissing) {
-            Set<Long> idsRemotos = remotosPorId.keySet();
-
             for (EventoLocal local : eventosLocales) {
-                Long idCatedra = local.getIdCatedra();
-                if (idCatedra != null && !idsRemotos.contains(idCatedra)) {
-                    log.info(
-                        "Eliminando evento_local id={} (idCatedra={}) porque ya no existe en cátedra",
-                        local.getId(),
-                        idCatedra
-                    );
+                // Ahora comparamos directamente el ID de nuestra DB con el mapa de la cátedra
+                if (!remotosPorId.containsKey(local.getId())) {
+                    log.info("Eliminando evento ID={} porque ya no existe en cátedra", local.getId());
                     eventoLocalRepository.delete(local);
                 }
             }
-        } else {
-            log.debug("Bajas deshabilitadas (app.sync.catedra.delete-missing=false)");
         }
 
-        log.info("Sincronización de eventos con cátedra finalizada");
+        log.info("Sincronización de eventos finalizada.");
     }
 
     private void mapearDesdeCatedra(CatedraEventoDetalleDTO remoto, EventoLocal local) {
-        local.setIdCatedra(remoto.getId());
         local.setTitulo(remoto.getTitulo());
         local.setResumen(remoto.getResumen());
         local.setDescripcion(remoto.getDescripcion());

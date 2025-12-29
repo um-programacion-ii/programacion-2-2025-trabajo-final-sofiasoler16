@@ -9,17 +9,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import com.um.eventosmovil.data.EventoDTO
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.um.eventosmovil.service.EventoService
+import com.um.eventosmovil.viewModel.EventDetailState
+import com.um.eventosmovil.viewModel.EventDetailViewModel
 import movil_tpfinal.composeapp.generated.resources.Res
 import movil_tpfinal.composeapp.generated.resources.fondo2
 import org.jetbrains.compose.resources.painterResource
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventoDetailScreen(
-    evento: EventoDTO,
+    token: String,
+    eventId: Long,
     onNavigateBack: () -> Unit
 ) {
+// Agrega una Key (llave unica) para no reutilizar el mismo viewModel y ver distintos eventosDetail
+    val viewModel: EventDetailViewModel = viewModel(key = eventId.toString()) {
+        EventDetailViewModel(EventoService(token), eventId)
+    }
+
+    val state by viewModel.state.collectAsState()
+
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(Res.drawable.fondo2),
@@ -32,45 +45,46 @@ fun EventoDetailScreen(
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
-                    title = { Text("Detalle del Evento", color = Color.White) },
+                    title = { Text("Detalle", color = Color.White) },
                     navigationIcon = {
                         TextButton(onClick = onNavigateBack) {
-                            Text("< Volver", color = Color.White)
+                            Text("< Atrás", color = Color.White)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF6750A4))
                 )
             }
         ) { padding ->
-            Column(
-                modifier = Modifier
-                    .padding(padding)
-                    .padding(24.dp)
-                    .fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f))
-                ) {
-                    Column(modifier = Modifier.padding(24.dp)) {
-                        Text(text = evento.titulo, style = MaterialTheme.typography.headlineMedium, color = Color(0xFF4A148C))
-                        Text(text = "Fecha: ${evento.fecha}", style = MaterialTheme.typography.bodySmall)
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(text = "Descripción", style = MaterialTheme.typography.titleMedium)
-                        Text(text = evento.resumen, style = MaterialTheme.typography.bodyLarge) // Aquí iría la información completa
-
-                        Spacer(modifier = Modifier.height(32.dp))
-
-                        Button(
-                            onClick = { /* Próximo issue: Selección de asientos */ },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6750A4))
+            Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+                when (val current = state) {
+                    is EventDetailState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    is EventDetailState.Success -> {
+                        val evento = current.evento
+                        Card(
+                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFE1BEE7))
                         ) {
-                            Text("Ver asientos") // Requerimiento del issue
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(evento.titulo, style = MaterialTheme.typography.headlineSmall)
+                                Text("$${evento.precioEntrada}", style = MaterialTheme.typography.titleLarge)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("📍 ${evento.direccion}", style = MaterialTheme.typography.bodyMedium)
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text("Descripción", style = MaterialTheme.typography.labelLarge)
+                                Text(evento.descripcion, style = MaterialTheme.typography.bodyMedium)
+
+                                Spacer(modifier = Modifier.height(24.dp))
+                                Button(
+                                    onClick = { /* Próximo Issue: Selección de asientos */ },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6750A4))
+                                ) {
+                                    Text("Ver asientos")
+                                }
+                            }
                         }
                     }
+                    is EventDetailState.Error -> Text("Error: ${current.message}", color = Color.Red)
                 }
             }
         }

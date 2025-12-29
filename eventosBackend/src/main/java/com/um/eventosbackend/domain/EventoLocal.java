@@ -18,14 +18,8 @@ public class EventoLocal extends AbstractAuditingEntity<Long> implements Seriali
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
-    @SequenceGenerator(name = "sequenceGenerator")
     @Column(name = "id")
     private Long id;
-
-    /** Id del evento en el servicio de la cátedra */
-    @Column(name = "id_catedra", nullable = false)
-    private Long idCatedra;
 
     @Column(name = "titulo", nullable = false)
     private String titulo;
@@ -82,21 +76,12 @@ public class EventoLocal extends AbstractAuditingEntity<Long> implements Seriali
         return this.id;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public EventoLocal id(Long id) {
         this.id = id;
-        return this;
-    }
-
-    public Long getIdCatedra() {
-        return idCatedra;
-    }
-
-    public void setIdCatedra(Long idCatedra) {
-        this.idCatedra = idCatedra;
-    }
-
-    public EventoLocal idCatedra(Long idCatedra) {
-        this.idCatedra = idCatedra;
         return this;
     }
 
