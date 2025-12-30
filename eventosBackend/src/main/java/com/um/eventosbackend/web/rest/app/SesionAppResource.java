@@ -1,5 +1,7 @@
 package com.um.eventosbackend.web.rest.app;
 
+import com.um.eventosbackend.domain.VentaLocal;
+import com.um.eventosbackend.repository.VentaLocalRepository;
 import com.um.eventosbackend.service.app.SesionService;
 import com.um.eventosbackend.service.dto.app.AsientoSeleccionadoDTO;
 import com.um.eventosbackend.service.dto.app.AsignarNombreRequest;
@@ -22,10 +24,12 @@ public class SesionAppResource {
 
     private final SesionService sesionService;
     private final ProxyClient proxyClient;
+    private final VentaLocalRepository ventaLocalRepository;
 
-    public SesionAppResource(SesionService sessionService, ProxyClient proxyClient) {
+    public SesionAppResource(SesionService sessionService, ProxyClient proxyClient, VentaLocalRepository ventaLocalRepository) {
         this.sesionService = sessionService;
         this.proxyClient = proxyClient;
+        this.ventaLocalRepository = ventaLocalRepository;
     }
 
     @PostMapping("/sesion")
@@ -60,17 +64,6 @@ public class SesionAppResource {
             return ResponseEntity.badRequest().header("X-error-message", e.getMessage()).build();
         }
     }
-
-
-//    @PostMapping("/bloquear")
-//    public ResponseEntity<SesionCompra> bloquearAsientos(@RequestBody BloqueoRequestResource request, HttpSession session) {
-//        try {
-//            SesionCompra sesion = sesionService.bloquearAsientosDirecto(session, request.getEventoId(), request.getAsientos());
-//            return ResponseEntity.ok(sesion);
-//        } catch (Exception e) {
-//            return ResponseEntity.badRequest().header("X-error-message", e.getMessage()).build();
-//        }
-//    }
 
     @PostMapping("/bloquear")
     public ResponseEntity<SesionCompra> bloquearAsientos(
