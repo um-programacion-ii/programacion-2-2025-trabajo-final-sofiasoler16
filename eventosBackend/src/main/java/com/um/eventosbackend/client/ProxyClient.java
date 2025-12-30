@@ -71,7 +71,7 @@ public class ProxyClient {
 
     public Mono<List<Map>> obtenerMisVentas(String token) {
         return this.webClient.get()
-            .uri("/proxy/ventas") 
+            .uri("/proxy/ventas")
             .header("Authorization", "Bearer " + token)
             .retrieve()
             .bodyToFlux(Map.class)
