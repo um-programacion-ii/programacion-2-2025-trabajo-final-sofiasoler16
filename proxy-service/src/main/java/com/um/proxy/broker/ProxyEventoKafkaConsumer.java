@@ -8,29 +8,38 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ProxyEventoKafkaConsumer {
-
-    private static final Logger log = LoggerFactory.getLogger(ProxyEventoKafkaConsumer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProxyEventoKafkaConsumer.class);
     private final BackendNotifyService backendNotifyService;
 
     public ProxyEventoKafkaConsumer(BackendNotifyService backendNotifyService) {
         this.backendNotifyService = backendNotifyService;
     }
 
-    // Escuchamos los dos posibles nombres y cambiamos el grupo a V3
-    @KafkaListener(topics = {"eventos", "evento-actualizado", "eventos.cambios"}, groupId = "sofiasoler16-proxy-v3")
+    @KafkaListener(
+            topics = "${application.kafka.topic}",
+            groupId = "sofiasoler16-proxy-final",
+            containerFactory = "kafkaListenerContainerFactory",
+            errorHandler = "kafkaErrorHandler"
+    )
     public void onEventoCambio(String mensaje) {
-        // Log para ver el mensaje CRUDO que llega
-        log.info("📩 NOTIFICACIÓN RECIBIDA DESDE KAFKA: '{}'", mensaje);
+        LOG.info("📩 SEÑAL RECIBIDA: {}", mensaje);
 
         try {
-            // Limpiamos el mensaje por si viene con comillas de JSON
-            String cleanId = mensaje.trim().replaceAll("\"", "");
-            Long idCatedra = Long.valueOf(cleanId);
+            // Limpiamos comillas por si es un JSON string
+            String cleanMessage = mensaje.trim().replaceAll("\"", "");
 
-            log.info("Gatillando sincronización en el backend para ID: {}", idCatedra);
-            backendNotifyService.notifyEventoCambio(idCatedra);
+            // Si el mensaje es puramente numérico, notificamos ese ID
+            if (cleanMessage.matches("\\d+")) {
+                Long idCatedra = Long.valueOf(cleanMessage);
+                LOG.info("Notificando cambio para ID específico: {}", idCatedra);
+                backendNotifyService.notifyEventoCambio(idCatedra);
+            } else {
+                // Si es un mensaje de texto (como el que recibiste), sincronizamos todo
+                LOG.info("Mensaje de texto detectado ('{}'). Iniciando sincronización general.", cleanMessage);
+                backendNotifyService.notifyEventoCambio(0L); // 0L indica "todo"
+            }
         } catch (Exception e) {
-            log.error("Error al procesar el ID de la cátedra: {}", mensaje);
+            LOG.error("❌ Error procesando el cuerpo del mensaje: {}", mensaje, e);
         }
     }
 }
