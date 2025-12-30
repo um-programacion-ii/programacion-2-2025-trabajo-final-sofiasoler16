@@ -10,18 +10,27 @@ import org.springframework.stereotype.Component;
 public class ProxyEventoKafkaConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(ProxyEventoKafkaConsumer.class);
-
     private final BackendNotifyService backendNotifyService;
 
     public ProxyEventoKafkaConsumer(BackendNotifyService backendNotifyService) {
         this.backendNotifyService = backendNotifyService;
     }
 
-    @KafkaListener(topics = "eventos.cambios", groupId = "sofiasoler16")
+    // Escuchamos los dos posibles nombres y cambiamos el grupo a V3
+    @KafkaListener(topics = {"eventos", "evento-actualizado", "eventos.cambios"}, groupId = "sofiasoler16-proxy-v3")
     public void onEventoCambio(String mensaje) {
-        log.info("📩 Proxy recibió cambio desde Kafka: {}", mensaje);
+        // Log para ver el mensaje CRUDO que llega
+        log.info("📩 NOTIFICACIÓN RECIBIDA DESDE KAFKA: '{}'", mensaje);
 
-        Long idCatedra = Long.valueOf(mensaje.trim());
-        backendNotifyService.notifyEventoCambio(idCatedra);
+        try {
+            // Limpiamos el mensaje por si viene con comillas de JSON
+            String cleanId = mensaje.trim().replaceAll("\"", "");
+            Long idCatedra = Long.valueOf(cleanId);
+
+            log.info("Gatillando sincronización en el backend para ID: {}", idCatedra);
+            backendNotifyService.notifyEventoCambio(idCatedra);
+        } catch (Exception e) {
+            log.error("Error al procesar el ID de la cátedra: {}", mensaje);
+        }
     }
 }

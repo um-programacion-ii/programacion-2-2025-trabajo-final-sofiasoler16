@@ -1,0 +1,25 @@
+# docker-compose.full.yml
+services:
+  postgresql:
+    extends:
+      file: src/main/docker/service.yml
+      service: postgresql
+
+  # Aquí incluimos Redis SOLO dentro de Docker
+  redis:
+    image: redis:7.4.1
+    ports:
+      - "6379:6379"
+
+  backend:
+    image: eventos-backend
+    depends_on:
+      - postgresql
+      - redis # El backend espera que este contenedor suba
+    environment:
+      - SPRING_DATA_REDIS_HOST=redis
+
+  proxy:
+    image: eventos-proxy
+    depends_on:
+      - backend
