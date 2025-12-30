@@ -1,4 +1,4 @@
-package com.um.eventosbackend.service.notify;
+//package com.um.eventosbackend.service.notify;
 
 //public class EventoNotifyDTO {
 //
