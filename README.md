@@ -40,7 +40,7 @@ Mobile App: Aplicación para el usuario final (Flutter) que permite la compra de
                                     └───────────┘
 ```
 
-## 🚀 Inicio Rápido
+## 🚀 Inicio
 Requisitos Previos
 Java 21 (JDK indispensable para el backend).
 
@@ -75,6 +75,12 @@ cd proxy-service
 cd eventosBackend
 ./mvnw -ntp spring-boot:run
 ```
+
+5. Para ejecutar los test
+```
+cd evemtosBackend
+./mvnw test
+```
 ## 🔐 Características Destacadas
 
 Filtrado por Usuario: El historial de compras (/api/app/mis-ventas) utiliza el contexto de seguridad JWT para filtrar los resultados por el login del usuario actual, asegurando que un usuario no pueda ver las ventas de otro.
@@ -89,8 +95,175 @@ Prevención de Recursión: Se implementó @JsonIgnoreProperties en las entidades
 ## 📚 Documentación de la API
 
 Endpoints Clave para la App móvil
-GET /api/app/mis-ventas: Historial personal de compras filtrado.
 
-POST /api/app/bloquear: Reserva temporal de asientos en Redis.
+GET http://localhost:8080/api/app/eventos : Trae los eventos
+```
+[
+{
+"id": 1,
+"titulo": "Conferencia Nerd",
+"resumen": "Esta es una conferencia de Nerds",
+"fecha": "2026-01-10T11:00:00Z",
+"imagen": "https://scontent-scl2-1.xx.fbcdn.net/v/t1.6435-9/78167441_1316997891841734_2833734909829316608_n.jpg?stp=dst-jpg_p960x960_tt6&_nc_cat=105&ccb=1-7&_nc_sid=127cfc&_nc_ohc=1EcS_p0lVGUQ7kNvwE1jrdM&_nc_oc=AdnCq7-RyHdhVpcPvW46Wehv10cjB9rcujwllkpiPP4H0OWUdbvCG0ygHh4zuXMQuIY&_nc_zt=23&_nc_ht=scontent-scl2-1.xx&_nc_gid=_fzHXJUwDiUHBphj96cIcw&oh=00_AfUm0lIje5462zK3WbGACoar67RKotbEXLqM6MeGpJdPoA&oe=68B9E878"
+},
+{
+"id": 5,
+"titulo": "Final Liga Mendocina de Basket",
+"resumen": "Partido final de la liga mendocina de basket - Equipo A vs Equipo 1",
+"fecha": "2026-01-14T14:00:00Z",
+"imagen": "https://grupoceosa.com/wp-content/uploads/2020/11/Webp.net-resizeimage-73-1.jpg"
+},
+{
+"id": 4,
+"titulo": "Ciclo de Música Clásica Evento 2",
+"resumen": "Evento musical de música clásica por vendimia - Evento 2/2",
+"fecha": "2026-01-30T20:00:00Z",
+"imagen": "https://media.diariouno.com.ar/adjuntos/298/migration/media/2019/04/DSC_0684-ok-700x395.jpg"
+},
+{
+"id": 3,
+"titulo": "Ciclo de Música Clásica Evento 1",
+"resumen": "Evento musical de música clásica por vendimia - Evento 1/2",
+"fecha": "2026-02-10T22:00:00Z",
+"imagen": "https://www.unidiversidad.com.ar/cache/mg1371_608_1076.jpg"
+}
+]
+```
 
-POST /api/app/venta: Finalización de compra y persistencia local.
+GET http://localhost:8080/api/app/eventos/1 : Trae un evento por id
+```
+{
+    "id": 1,
+    "titulo": "Conferencia Nerd",
+    "resumen": "Esta es una conferencia de Nerds",
+    "descripcion": "Esta es una conferencia de prueba para verificar que los datos están correctos",
+    "fecha": "2026-01-10T11:00:00Z",
+    "direccion": "Aula magna de la Universidad de Mendoza",
+    "imagen": "https://scontent-scl2-1.xx.fbcdn.net/v/t1.6435-9/78167441_1316997891841734_2833734909829316608_n.jpg?stp=dst-jpg_p960x960_tt6&_nc_cat=105&ccb=1-7&_nc_sid=127cfc&_nc_ohc=1EcS_p0lVGUQ7kNvwE1jrdM&_nc_oc=AdnCq7-RyHdhVpcPvW46Wehv10cjB9rcujwllkpiPP4H0OWUdbvCG0ygHh4zuXMQuIY&_nc_zt=23&_nc_ht=scontent-scl2-1.xx&_nc_gid=_fzHXJUwDiUHBphj96cIcw&oh=00_AfUm0lIje5462zK3WbGACoar67RKotbEXLqM6MeGpJdPoA&oe=68B9E878",
+    "filasAsientos": 10,
+    "columnasAsientos": 6,
+    "precioEntrada": 2684.62,
+    "tipoNombre": "Conferencia",
+    "tipoDescripcion": "Conferencia"
+}
+```
+GET http://localhost:8080/api/app/eventos/1/asientos?filas=10&columnas=10 : Trae la matriz de asientos de un evento
+
+```
+{
+    "eventoId": 1,
+    "filas": 10,
+    "columnas": 10,
+    "matriz": [
+        [
+            "VENDIDO",
+            "VENDIDO",
+            "VENDIDO",
+            "VENDIDO",
+            "VENDIDO",
+            "VENDIDO",
+            "LIBRE",
+            "LIBRE",
+            "LIBRE",
+            "LIBRE"
+        ],
+        [
+            "BLOQUEADO",
+            "VENDIDO",
+            "BLOQUEADO",
+            "VENDIDO",
+            "VENDIDO",
+            "LIBRE",
+            "LIBRE",
+            "LIBRE",
+            "LIBRE",
+            "LIBRE"
+        ],
+ ...
+```
+
+GET http://localhost:8080/api/app/mis-ventas : Historial personal de compras
+```
+[
+    {
+        "eventoId": 2,
+        "ventaId": 1643,
+        "fechaVenta": "2025-12-26T00:02:00.651703Z",
+        "resultado": true,
+        "descripcion": "Venta realizada con exito",
+        "precioVenta": 4506.01,
+        "cantidadAsientos": 1
+    },
+    {
+        "eventoId": 2,
+        "ventaId": 1656,
+        "fechaVenta": "2025-12-26T11:02:24.845089Z",
+        "resultado": true,
+        "descripcion": "Venta realizada con exito",
+        "precioVenta": 4517.4,
+        "cantidadAsientos": 1
+    },
+    {
+        "eventoId": 2,
+        "ventaId": 1694,
+        "fechaVenta": "2025-12-26T18:10:58.746576Z",
+        "resultado": false,
+        "descripcion": "Venta rechazada. Alguno de los asientos no se encontraban bloqueados para la venta.",
+        "precioVenta": 4517.4,
+        "cantidadAsientos": 0
+    },
+```
+POST http://localhost:8080/api/app/bloquear : Reserva temporal de asientos
+
+POST http://localhost:8080/api/app/venta: Compra del asiento
+
+## EStructura del proyecto
+
+```
+.
+├── eventosBackend/               # Núcleo del Sistema (Spring Boot + JHipster)
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── docker/
+│   │   │   ├── java/com/um/eventosbackend/
+│   │   │   │   ├── config/           # Seguridad (SecurityConfiguration) y filtros
+│   │   │   │   ├── domain/           # Entidades (VentaLocal, AsientoVenta con @JsonIgnoreProperties)
+│   │   │   │   ├── repository/       # Consultas SQL (Filtro de "mis-ventas")
+│   │   │   │   ├── service/
+│   │   │   │   │   ├── app/     
+│   │   │   │   │   ├── catedra/      # EventoSyncService (Motor de sincronización)
+│   │   │   │   │   └── dto/
+│   │   │   │   └── web/rest/         # Controladores API
+│   │   │   │       ├── app/
+│   │   │   │       │   ├── SesionAppResource/   # Endpoints para la App Móvil
+│   │   │   │       │   └── EventoAppResource/   # Endpoints 
+│   │   │   └── EventoNotifyResource  # Recibe avisos del Proxy (/api/public/...)
+│   │   │   └── resources/            # application-dev.yml (Configuración DB y Cátedra)
+│   │   └── test/                     # Tests de integración (EventoSyncServiceDbTest)
+│   ├── pom.xml
+│   └── src/main/docker/              # Configuración de PostgreSQL local
+│
+├── proxy-service/                # Intermediario de Mensajería y Caché
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/com/um/proxy/
+│   │   │   │   ├── broker/           
+│   │   │   │   │   └── ProxyEventoKafkaConsumer  #  (Escucha a la cátedra)
+│   │   │   │   ├── config/           # ProxyProperties y KafkaConfiguration (Resiliencia)
+│   │   │   │   └── service/          # Lógica de comunicación
+│   │   │   │       └── BackendNotifyService/ # Notifica al Backend por vía pública
+│   │   │   └── resources/            # application.yml (Configuración Kafka/Redis)
+│   └── pom.xml
+│
+├── mobile/                       # Aplicación Móvil
+│   ├── ComposeApp/                      
+│        └── src/commonMain/kotlin/com.um.eventosmovil
+│               ├── data
+│               ├── service
+│               ├── ui
+│               │    ├── eventos
+│               │    └── login
+│               └── viewModel      
+│
+└── README.md                     # Documentación técnica del sistema completo
+```
