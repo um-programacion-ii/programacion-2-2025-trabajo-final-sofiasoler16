@@ -22,12 +22,13 @@ public class EventoNotifyResource {
 
  // {@code POST  /admin/eventos/notify} : recibe notificaciones de cambios de eventos.
 
-    @PostMapping("/admin/eventos/notify")
+    @PostMapping("/public/eventos/notify")
     public ResponseEntity<Void> notifyCambioEvento(@RequestBody(required = false) EventoNotifyDTO notification) {
+        // Este log es tu mejor amigo para saber que se está usando este archivo
         if (notification != null && notification.getIdCatedra() != null) {
-            log.info("Recibida notificación de cambio de evento desde proxy. idCatedra={}", notification.getIdCatedra());
+            log.info("📢 [NOTIFICACIÓN] Sincronizando evento específico ID: {}", notification.getIdCatedra());
         } else {
-            log.info("Recibida notificación genérica de cambios de eventos desde proxy.");
+            log.info("📢 [NOTIFICACIÓN] Sincronización general activada.");
         }
 
         eventoSyncService.syncEventos();

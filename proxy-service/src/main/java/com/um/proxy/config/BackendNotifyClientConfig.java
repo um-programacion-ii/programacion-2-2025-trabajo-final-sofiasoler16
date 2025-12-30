@@ -11,15 +11,10 @@ public class BackendNotifyClientConfig {
 
     @Bean
     WebClient backendWebClient(
-            @Value("${backend.base-url:http://localhost:8080}") String backendBaseUrl,
-            @Value("${backend.notify-token:}") String notifyToken
+            @Value("${backend.base-url:http://localhost:8080}") String backendBaseUrl
     ) {
-        WebClient.Builder builder = WebClient.builder().baseUrl(backendBaseUrl);
-
-        if (notifyToken != null && !notifyToken.isBlank()) {
-            builder.defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + notifyToken);
-        }
-
-        return builder.build();
+        return WebClient.builder()
+                .baseUrl(backendBaseUrl)
+                .build();
     }
 }

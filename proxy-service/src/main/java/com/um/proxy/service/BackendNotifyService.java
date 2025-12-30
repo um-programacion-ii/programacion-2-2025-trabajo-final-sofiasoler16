@@ -20,7 +20,7 @@ public class BackendNotifyService {
         dto.setIdCatedra(idCatedra);
 
         backendWebClient.post()
-                .uri("/api/admin/eventos/notify")
+                .uri("/api/public/eventos/notify")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(dto)
                 .retrieve()
