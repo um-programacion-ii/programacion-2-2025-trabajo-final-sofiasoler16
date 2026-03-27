@@ -1,0 +1,80 @@
+package com.um.eventosbackend.service.app;
+
+import com.um.eventosbackend.domain.EventoLocal;
+import com.um.eventosbackend.repository.EventoLocalRepository;
+import com.um.eventosbackend.service.dto.app.EventoDetalleDTO;
+import com.um.eventosbackend.service.dto.app.EventoResumenDTO;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+
+@Service
+@Transactional
+public class EventoAppService {
+
+    private final EventoLocalRepository eventoLocalRepository;
+    private final com.um.eventosbackend.client.ProxyClient proxyClient;
+
+    @org.springframework.beans.factory.annotation.Value("${catedra.api-token}")
+    private String tokenCatedra;
+
+    public EventoAppService(EventoLocalRepository eventoLocalRepository, com.um.eventosbackend.client.ProxyClient proxyClient) {
+        this.eventoLocalRepository = eventoLocalRepository;
+        this.proxyClient = proxyClient;
+    }
+
+    public List<EventoResumenDTO> listarEventos() {
+        return eventoLocalRepository.findByActivoTrueOrderByFechaAsc().stream()
+            .map(this::toResumenDTO)
+            .collect(Collectors.toList());
+    }
+
+    public Optional<EventoDetalleDTO> obtenerEvento(Long id) {
+        return eventoLocalRepository.findByIdAndActivoTrue(id)
+            .map(this::toDetalleDTO);
+    }
+
+    public Optional<EventoDetalleDTO> obtenerPorIdCatedra(Long idCatedra) {
+        return eventoLocalRepository.findByIdAndActivoTrue(idCatedra)
+            .map(this::toDetalleDTO);
+    }
+
+    private EventoResumenDTO toResumenDTO(EventoLocal e) {
+        EventoResumenDTO dto = new EventoResumenDTO();
+        dto.setId(e.getId());
+        dto.setTitulo(e.getTitulo());
+        dto.setResumen(e.getResumen());
+        dto.setFecha(e.getFecha());
+        dto.setImagen(e.getImagen());
+        return dto;
+    }
+
+    private EventoDetalleDTO toDetalleDTO(EventoLocal e) {
+        EventoDetalleDTO dto = new EventoDetalleDTO();
+        dto.setId(e.getId());
+        dto.setTitulo(e.getTitulo());
+        dto.setResumen(e.getResumen());
+        dto.setDescripcion(e.getDescripcion());
+        dto.setFecha(e.getFecha());
+        dto.setDireccion(e.getDireccion());
+        dto.setImagen(e.getImagen());
+        dto.setFilasAsientos(e.getFilasAsientos());
+        dto.setColumnasAsientos(e.getColumnasAsientos());
+        dto.setPrecioEntrada(e.getPrecioEntrada());
+
+        if (e.getEventoTipo() != null) {
+            dto.setTipoNombre(e.getEventoTipo().getNombre());
+            dto.setTipoDescripcion(e.getEventoTipo().getDescripcion());
+        }
+
+        return dto;
+    }
+
+    public Object obtenerMapaAsientos(Long id, Integer filas, Integer columnas) {
+        // Llamamos al proxy y bloqueamos hasta tener la respuesta (igual que en SesionService)
+        return proxyClient.obtenerMapaAsientos(id, filas, columnas, tokenCatedra).block();
+    }
+}

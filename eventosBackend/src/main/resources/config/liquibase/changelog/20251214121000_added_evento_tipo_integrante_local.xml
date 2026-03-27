@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!-- 1) Crear tabla evento_tipo_local -->
+  <changeSet id="20251214121000-1" author="sofia">
+    <createTable tableName="evento_tipo_local">
+      <column name="id" type="bigint">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="nombre" type="varchar(255)">
+        <constraints nullable="false" unique="true" uniqueConstraintName="uk_evento_tipo_local_nombre"/>
+      </column>
+      <column name="descripcion" type="varchar(255)"/>
+      <!-- auditing -->
+      <column name="created_by" type="varchar(50)"/>
+      <column name="created_date" type="timestamp"/>
+      <column name="last_modified_by" type="varchar(50)"/>
+      <column name="last_modified_date" type="timestamp"/>
+    </createTable>
+
+    <!-- Si tu proyecto usa una secuencia global, dejamos el id para que lo maneje JPA.
+         Si preferís que DB genere id, decime y lo ajustamos a nextval(). -->
+  </changeSet>
+
+  <!-- 2) Insertar tipo default (id fijo para poder referenciarlo) -->
+  <changeSet id="20251214121000-2" author="sofia">
+    <insert tableName="evento_tipo_local">
+      <column name="id" valueNumeric="1"/>
+      <column name="nombre" value="Desconocido"/>
+      <column name="descripcion" value="Tipo inicial por defecto"/>
+    </insert>
+  </changeSet>
+
+  <!-- 3) Agregar columna evento_tipo_id a evento_local (nullable primero) -->
+  <changeSet id="20251214121000-3" author="sofia">
+    <addColumn tableName="evento_local">
+      <column name="evento_tipo_id" type="bigint"/>
+    </addColumn>
+  </changeSet>
+
+  <!-- 4) Backfill de eventos existentes -->
+  <changeSet id="20251214121000-4" author="sofia">
+    <update tableName="evento_local">
+      <column name="evento_tipo_id" valueNumeric="1"/>
+      <where>evento_tipo_id IS NULL</where>
+    </update>
+  </changeSet>
+
+  <!-- 5) Ahora sí NOT NULL + FK -->
+  <changeSet id="20251214121000-5" author="sofia">
+    <addNotNullConstraint tableName="evento_local" columnName="evento_tipo_id" columnDataType="bigint"/>
+    <addForeignKeyConstraint
+      baseTableName="evento_local"
+      baseColumnNames="evento_tipo_id"
+      referencedTableName="evento_tipo_local"
+      referencedColumnNames="id"
+      constraintName="fk_evento_local__evento_tipo_local"/>
+  </changeSet>
+
+  <!-- 6) Crear tabla integrante_local -->
+  <changeSet id="20251214121000-6" author="sofia">
+    <createTable tableName="integrante_local">
+      <column name="id" type="bigint">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="nombre" type="varchar(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="apellido" type="varchar(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="identificacion" type="varchar(255)"/>
+      <!-- auditing -->
+      <column name="created_by" type="varchar(50)"/>
+      <column name="created_date" type="timestamp"/>
+      <column name="last_modified_by" type="varchar(50)"/>
+      <column name="last_modified_date" type="timestamp"/>
+    </createTable>
+
+    <addUniqueConstraint
+      tableName="integrante_local"
+      columnNames="nombre, apellido, identificacion"
+      constraintName="ux_integrante_local"/>
+  </changeSet>
+
+  <!-- 7) Crear tabla intermedia many-to-many -->
+  <changeSet id="20251214121000-7" author="sofia">
+    <createTable tableName="rel_evento_local__integrante_local">
+      <column name="evento_local_id" type="bigint">
+        <constraints nullable="false"/>
+      </column>
+      <column name="integrante_local_id" type="bigint">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <addPrimaryKey
+      tableName="rel_evento_local__integrante_local"
+      columnNames="evento_local_id, integrante_local_id"
+      constraintName="pk_rel_evento_integrante"/>
+
+    <addForeignKeyConstraint
+      baseTableName="rel_evento_local__integrante_local"
+      baseColumnNames="evento_local_id"
+      referencedTableName="evento_local"
+      referencedColumnNames="id"
+      constraintName="fk_rel_evento_integrante__evento"/>
+
+    <addForeignKeyConstraint
+      baseTableName="rel_evento_local__integrante_local"
+      baseColumnNames="integrante_local_id"
+      referencedTableName="integrante_local"
+      referencedColumnNames="id"
+      constraintName="fk_rel_evento_integrante__integrante"/>
+  </changeSet>
+
+</databaseChangeLog>

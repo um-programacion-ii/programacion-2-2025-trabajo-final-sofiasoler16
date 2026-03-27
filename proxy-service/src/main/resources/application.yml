@@ -1,0 +1,49 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: proxy-service
+
+  data:
+    redis:
+      asientos-key-pattern: "evento_%s"
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      missing-topics-fatal: false
+
+  # Esta sección debe coincidir con tu clase ProxyProperties.java
+application:
+  backend:
+    base-url: ${BACKEND_URL:http://localhost:8080}
+    notify-path: /api/admin/eventos/notify
+  kafka:
+    topic: ${KAFKA_TOPIC:eventos-actualizacion} # Intentamos el topic
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,mappings
+
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+
+backend:
+  base-url: ${BACKEND_URL:http://localhost:8080}
+  notify-token: ${BACKEND_NOTIFY_TOKEN:eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzb2ZpYXNvbGVyIiwiZXhwIjoxODUyODMyNDI3LCJhdXRoIjoiUk9MRV9VU0VSIiwiaWF0IjoxNzY2NDMyNDI3fQ._WSYihACVqAeF6nfoRTtqcvleu6FmaiKtWyNnXgfVpCpSDg6rAxXP2YqwKLdqsxTwzB9pO_gDKJsR5qJx7bCHg}
+
+app:
+  backend:
+    base-url: ${BACKEND_URL:http://localhost:8080}
+  catedra:
+    base-url: ${CATEDRA_URL:http://192.168.194.250:8080}
+

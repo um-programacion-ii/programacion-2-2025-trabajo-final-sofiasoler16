@@ -1,0 +1,25 @@
+spring:
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+        auto-offset-reset: earliest
+  data:
+    redis:
+      host: 192.168.194.250
+      port: 6379
+
+
+
+logging:
+  level:
+    root: INFO
+    com.um.proxy: DEBUG
+    org.springframework.kafka: DEBUG
+    org.apache.kafka: WARN
+
+
+backend:
+  base-url: http://localhost:8080
+#  notify-token: ${BACKEND_NOTIFY_TOKEN:eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzb2ZpYXNvbGVyIiwiZXhwIjoxODUyODMyNDI3LCJhdXRoIjoiUk9MRV9VU0VSIiwiaWF0IjoxNzY2NDMyNDI3fQ._WSYihACVqAeF6nfoRTtqcvleu6FmaiKtWyNnXgfVpCpSDg6rAxXP2YqwKLdqsxTwzB9pO_gDKJsR5qJx7bCHg}
+
+
